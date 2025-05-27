@@ -4,8 +4,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 import PageHeader from "@/components/dashboard/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -22,8 +23,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Save } from "lucide-react";
+import type { StockItem } from "./../page";
 
 const stockItemFormSchema = z.object({
+  id: z.string().optional(),
   componentName: z.string().min(3, { message: "Component name must be at least 3 characters." }),
   partNumber: z.string().min(1, { message: "Part number is required." }),
   quantity: z.coerce.number().min(0, { message: "Quantity cannot be negative." }),
@@ -37,7 +40,10 @@ type StockItemFormValues = z.infer<typeof stockItemFormSchema>;
 
 export default function NewStockItemPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [itemIdToEdit, setItemIdToEdit] = useState<string | null>(null);
 
   const form = useForm<StockItemFormValues>({
     resolver: zodResolver(stockItemFormSchema),
@@ -52,20 +58,62 @@ export default function NewStockItemPage() {
     },
   });
 
+  useEffect(() => {
+    const id = searchParams.get("id");
+    if (id) {
+      setIsEditMode(true);
+      setItemIdToEdit(id);
+      const componentName = searchParams.get("componentName");
+      const partNumber = searchParams.get("partNumber");
+      const quantity = searchParams.get("quantity");
+      const location = searchParams.get("location");
+      const minStockLevel = searchParams.get("minStockLevel");
+      const imageUrl = searchParams.get("imageUrl");
+      const dataAihint = searchParams.get("dataAihint");
+
+      form.reset({
+        id,
+        componentName: componentName || "",
+        partNumber: partNumber || "",
+        quantity: quantity ? parseInt(quantity) : 0,
+        location: location || "",
+        minStockLevel: minStockLevel ? parseInt(minStockLevel) : 0,
+        imageUrl: imageUrl || "",
+        dataAihint: dataAihint || "",
+      });
+    }
+  }, [searchParams, form]);
+
   function onSubmit(data: StockItemFormValues) {
-    console.log("New stock item data:", data);
-    toast({
-      title: "Stock Item Added",
-      description: `${data.componentName} has been added to stock.`,
-    });
+    const storedItemsString = localStorage.getItem("stockItems");
+    let items: StockItem[] = storedItemsString ? JSON.parse(storedItemsString) : [];
+
+    if (isEditMode && itemIdToEdit) {
+      items = items.map(item => item.id === itemIdToEdit ? { ...item, ...data, id: itemIdToEdit } : item);
+      toast({
+        title: "Stock Item Updated",
+        description: `${data.componentName} has been updated successfully.`,
+      });
+    } else {
+      const newItem: StockItem = {
+        ...data,
+        id: `stk${Date.now()}`,
+      };
+      items.push(newItem);
+      toast({
+        title: "Stock Item Added",
+        description: `${data.componentName} has been added to stock.`,
+      });
+    }
+    localStorage.setItem("stockItems", JSON.stringify(items));
     router.push("/dashboard/stock");
   }
 
   return (
     <>
       <PageHeader
-        title="Add New Stock Component"
-        description="Fill in the details for the new component."
+        title={isEditMode ? "Edit Stock Component" : "Add New Stock Component"}
+        description={isEditMode ? "Update the details of the component." : "Fill in the details for the new component."}
       >
         <Button variant="outline" asChild>
           <Link href="/dashboard/stock">
@@ -142,7 +190,6 @@ export default function NewStockItemPage() {
                     <FormLabel>Minimum Stock Level (Optional)</FormLabel>
                     <FormControl>
                       <Input type="number" placeholder="e.g., 10" {...field} 
-                        // Ensure the value passed to input is string or number
                         value={field.value === undefined || field.value === null ? '' : field.value}
                         onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
                       />
@@ -160,7 +207,7 @@ export default function NewStockItemPage() {
                     <FormControl>
                       <Input type="url" placeholder="https://placehold.co/600x400.png" {...field} value={field.value ?? ''} />
                     </FormControl>
-                    <FormDescription>If left blank, a default placeholder will be used.</FormDescription>
+                    <FormDescription>If left blank, a default placeholder will be used. e.g., https://placehold.co/600x400.png?text=My+Part</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -184,7 +231,7 @@ export default function NewStockItemPage() {
                   Cancel
                 </Button>
                 <Button type="submit">
-                  <Save className="mr-2 h-4 w-4" /> Save Component
+                  <Save className="mr-2 h-4 w-4" /> {isEditMode ? "Update Component" : "Save Component"}
                 </Button>
               </div>
             </form>

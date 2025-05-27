@@ -1,16 +1,59 @@
+
+"use client";
+
+import { useState, useEffect } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
 import ManualCard from "@/components/manuals/ManualCard";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, UploadCloud, BookOpenText } from "lucide-react"; // Ensured BookOpenText is imported
+import { PlusCircle, UploadCloud, BookOpenText } from "lucide-react";
 import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
 
-const manuals = [
-  { id: "man001", manualTitle: "CNC Mill XM500 Operator Manual", machineType: "CNC XM500", version: "3.1", lastUpdated: "2023-05-15", pdfUrl: "/manuals/cnc_xm500_op.pdf", coverImageUrl: "https://placehold.co/600x400.png?text=CNC+Manual" , dataAihint:"cnc machine"},
-  { id: "man002", manualTitle: "Hydraulic Press HP-20 Maintenance Guide", machineType: "HP-20 Press", version: "1.5", lastUpdated: "2022-11-01", pdfUrl: "/manuals/hp20_maint.pdf", coverImageUrl: "https://placehold.co/600x400.png?text=Press+Manual" , dataAihint:"hydraulic press"},
-  { id: "man003", manualTitle: "Robotic Arm KUKA-R800 Service Manual", machineType: "KUKA R800", version: "2.0 Rev B", lastUpdated: "2024-01-20", pdfUrl: "/manuals/kuka_r800_service.pdf", coverImageUrl: "https://placehold.co/600x400.png?text=Robot+Manual" , dataAihint:"robotic arm" },
+export interface Manual {
+  id: string;
+  manualTitle: string;
+  machineType: string;
+  version?: string;
+  lastUpdated?: string;
+  pdfUrl: string;
+  coverImageUrl?: string;
+  dataAihint?: string;
+}
+
+const initialManuals: Manual[] = [
+  { id: "man001", manualTitle: "CNC Mill XM500 Operator Manual", machineType: "CNC XM500", version: "3.1", lastUpdated: "2023-05-15", pdfUrl: "#", coverImageUrl: "https://placehold.co/600x400.png", dataAihint:"cnc machine"},
+  { id: "man002", manualTitle: "Hydraulic Press HP-20 Maintenance Guide", machineType: "HP-20 Press", version: "1.5", lastUpdated: "2022-11-01", pdfUrl: "#", coverImageUrl: "https://placehold.co/600x400.png", dataAihint:"hydraulic press"},
+  { id: "man003", manualTitle: "Robotic Arm KUKA-R800 Service Manual", machineType: "KUKA R800", version: "2.0 Rev B", lastUpdated: "2024-01-20", pdfUrl: "#", coverImageUrl: "https://placehold.co/600x400.png", dataAihint:"robotic arm" },
 ];
 
 export default function ManualBookPage() {
+  const [manuals, setManuals] = useState<Manual[]>([]);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const storedManuals = localStorage.getItem("manuals");
+    if (storedManuals) {
+      setManuals(JSON.parse(storedManuals));
+    } else {
+      setManuals(initialManuals);
+    }
+  }, []);
+
+  useEffect(() => {
+   if(manuals.length > 0 || localStorage.getItem("manuals")) {
+    localStorage.setItem("manuals", JSON.stringify(manuals));
+   }
+  }, [manuals]);
+
+  const handleDeleteManual = (manualId: string) => {
+    setManuals(prevManuals => prevManuals.filter(manual => manual.id !== manualId));
+    toast({
+      title: "Manual Deleted",
+      description: "The manual has been successfully deleted.",
+      variant: "destructive",
+    });
+  };
+  
   return (
     <>
       <PageHeader 
@@ -25,9 +68,13 @@ export default function ManualBookPage() {
       </PageHeader>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {manuals.map(manual => (
-          <ManualCard key={manual.id} {...manual} />
+          <ManualCard 
+            key={manual.id} 
+            {...manual} 
+            onDelete={() => handleDeleteManual(manual.id)}
+            editPath="/dashboard/manuals/new"
+          />
         ))}
-        {/* Placeholder for empty state */}
         {manuals.length === 0 && (
           <div className="col-span-full text-center py-10">
             <BookOpenText className="mx-auto h-12 w-12 text-muted-foreground" />

@@ -4,8 +4,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 import PageHeader from "@/components/dashboard/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -22,8 +23,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Save } from "lucide-react";
+import type { Manual } from "./../page";
 
 const manualFormSchema = z.object({
+  id: z.string().optional(),
   manualTitle: z.string().min(3, { message: "Manual title must be at least 3 characters." }),
   machineType: z.string().min(1, { message: "Machine type is required." }),
   version: z.string().optional(),
@@ -37,7 +40,10 @@ type ManualFormValues = z.infer<typeof manualFormSchema>;
 
 export default function NewManualPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [manualIdToEdit, setManualIdToEdit] = useState<string | null>(null);
 
   const form = useForm<ManualFormValues>({
     resolver: zodResolver(manualFormSchema),
@@ -52,20 +58,63 @@ export default function NewManualPage() {
     },
   });
 
+  useEffect(() => {
+    const id = searchParams.get("id");
+    if (id) {
+      setIsEditMode(true);
+      setManualIdToEdit(id);
+      const manualTitle = searchParams.get("manualTitle");
+      const machineType = searchParams.get("machineType");
+      const version = searchParams.get("version");
+      const lastUpdated = searchParams.get("lastUpdated");
+      const pdfUrl = searchParams.get("pdfUrl");
+      const coverImageUrl = searchParams.get("coverImageUrl");
+      const dataAihint = searchParams.get("dataAihint");
+
+      form.reset({
+        id,
+        manualTitle: manualTitle || "",
+        machineType: machineType || "",
+        version: version || "",
+        lastUpdated: lastUpdated || new Date().toISOString().split('T')[0],
+        pdfUrl: pdfUrl || "",
+        coverImageUrl: coverImageUrl || "",
+        dataAihint: dataAihint || "",
+      });
+    }
+  }, [searchParams, form]);
+
   function onSubmit(data: ManualFormValues) {
-    console.log("New manual data:", data);
-    toast({
-      title: "Manual Added",
-      description: `${data.manualTitle} has been added successfully.`,
-    });
+    const storedManualsString = localStorage.getItem("manuals");
+    let manuals: Manual[] = storedManualsString ? JSON.parse(storedManualsString) : [];
+
+    if (isEditMode && manualIdToEdit) {
+      manuals = manuals.map(manual => manual.id === manualIdToEdit ? { ...manual, ...data, id: manualIdToEdit } : manual);
+      toast({
+        title: "Manual Updated",
+        description: `${data.manualTitle} has been updated successfully.`,
+      });
+    } else {
+      const newManual: Manual = {
+        ...data,
+        id: `man${Date.now()}`,
+        pdfUrl: data.pdfUrl || "#", // Ensure pdfUrl is not empty
+      };
+      manuals.push(newManual);
+      toast({
+        title: "Manual Added",
+        description: `${data.manualTitle} has been added successfully.`,
+      });
+    }
+    localStorage.setItem("manuals", JSON.stringify(manuals));
     router.push("/dashboard/manuals");
   }
 
   return (
     <>
       <PageHeader
-        title="Add New Manual"
-        description="Fill in the details for the new maintenance manual."
+        title={isEditMode ? "Edit Manual" : "Add New Manual"}
+        description={isEditMode ? "Update the details of the maintenance manual." : "Fill in the details for the new maintenance manual."}
       >
         <Button variant="outline" asChild>
           <Link href="/dashboard/manuals">
@@ -156,7 +205,7 @@ export default function NewManualPage() {
                     <FormControl>
                       <Input type="url" placeholder="https://placehold.co/600x400.png" {...field} value={field.value ?? ''} />
                     </FormControl>
-                    <FormDescription>If left blank, a default placeholder will be used.</FormDescription>
+                    <FormDescription>If left blank, a default placeholder will be used. e.g., https://placehold.co/600x400.png?text=My+Manual </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -180,7 +229,7 @@ export default function NewManualPage() {
                   Cancel
                 </Button>
                 <Button type="submit">
-                  <Save className="mr-2 h-4 w-4" /> Save Manual
+                  <Save className="mr-2 h-4 w-4" /> {isEditMode ? "Update Manual" : "Save Manual"}
                 </Button>
               </div>
             </form>

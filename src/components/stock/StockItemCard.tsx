@@ -1,9 +1,22 @@
+
 import Image from "next/image";
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Edit3, Package, PackageCheck, PackageMinus, PackagePlus, Scaling } from "lucide-react";
+import { AlertTriangle, Edit3, Package, PackageCheck, PackageMinus, PackagePlus, Scaling, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface StockItemCardProps {
   id: string;
@@ -13,6 +26,9 @@ interface StockItemCardProps {
   location: string;
   minStockLevel?: number;
   imageUrl?: string;
+  dataAihint?: string;
+  onDelete: (id: string) => void;
+  editPath: string;
 }
 
 export default function StockItemCard({
@@ -23,18 +39,23 @@ export default function StockItemCard({
   location,
   minStockLevel,
   imageUrl = "https://placehold.co/600x400.png",
+  dataAihint,
+  onDelete,
+  editPath,
 }: StockItemCardProps) {
   const isLowStock = minStockLevel !== undefined && quantity < minStockLevel;
+
+  const editUrl = `${editPath}?id=${id}&componentName=${encodeURIComponent(componentName)}&partNumber=${encodeURIComponent(partNumber)}&quantity=${quantity}&location=${encodeURIComponent(location)}${minStockLevel !== undefined ? `&minStockLevel=${minStockLevel}` : ''}${imageUrl ? `&imageUrl=${encodeURIComponent(imageUrl)}` : ''}${dataAihint ? `&dataAihint=${encodeURIComponent(dataAihint)}` : ''}`;
 
   return (
     <Card className={cn("flex flex-col overflow-hidden shadow-lg transition-all hover:shadow-xl", isLowStock && "border-destructive")}>
       <div className="relative h-48 w-full">
         <Image
-          src={imageUrl}
+          src={imageUrl || "https://placehold.co/600x400.png?text=Component"}
           alt={componentName}
           layout="fill"
           objectFit="cover"
-          data-ai-hint="machine parts"
+          data-ai-hint={dataAihint || "machine parts"}
         />
          {isLowStock && (
           <Badge variant="destructive" className="absolute right-2 top-2">
@@ -62,11 +83,34 @@ export default function StockItemCard({
            </div>
         )}
       </CardContent>
-      <CardFooter className="gap-2 border-t pt-4">
-        <Button variant="outline" size="sm" className="flex-1">
-          <Edit3 className="mr-2 h-4 w-4" /> Adjust Stock
+      <CardFooter className="grid grid-cols-2 gap-2 border-t pt-4">
+         <Button variant="outline" size="sm" className="flex-1" asChild>
+          <Link href={editUrl}>
+            <Edit3 className="mr-2 h-4 w-4" /> Edit
+          </Link>
         </Button>
-         <Button variant="default" size="sm" className="flex-1">
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" size="sm" className="flex-1">
+              <Trash2 className="mr-2 h-4 w-4" /> Delete
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the stock item
+                &quot;{componentName}&quot;.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={() => onDelete(id)}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        {/* Example additional action, can be removed or repurposed */}
+        <Button variant="default" size="sm" className="col-span-2 flex-1 mt-2">
           <PackagePlus className="mr-2 h-4 w-4" /> Order More
         </Button>
       </CardFooter>

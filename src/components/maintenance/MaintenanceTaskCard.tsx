@@ -1,9 +1,22 @@
+
 import Image from "next/image";
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Clock, Edit3, Trash2, Wrench } from "lucide-react";
+import { CheckCircle2, Clock, Edit3, Trash2, Wrench, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export type TaskStatus = "Pending" | "In Progress" | "Completed" | "Overdue";
 
@@ -15,7 +28,10 @@ interface MaintenanceTaskCardProps {
   status: TaskStatus;
   assignedTo?: string;
   priority?: "Low" | "Medium" | "High";
+  description?: string;
   imageUrl?: string;
+  onDelete: (id: string) => void;
+  editPath: string; // e.g., /dashboard/maintenance/daily/new
 }
 
 const statusColors: Record<TaskStatus, string> = {
@@ -29,7 +45,7 @@ const statusIcons: Record<TaskStatus, React.ElementType> = {
   Pending: Clock,
   "In Progress": Wrench,
   Completed: CheckCircle2,
-  Overdue: Clock,
+  Overdue: AlertTriangle, // Changed for overdue
 };
 
 export default function MaintenanceTaskCard({
@@ -40,15 +56,20 @@ export default function MaintenanceTaskCard({
   status,
   assignedTo,
   priority,
+  description,
   imageUrl = "https://placehold.co/600x400.png",
+  onDelete,
+  editPath,
 }: MaintenanceTaskCardProps) {
   const StatusIcon = statusIcons[status];
+
+  const editUrl = `${editPath}?id=${id}&taskName=${encodeURIComponent(taskName)}&machineId=${encodeURIComponent(machineId)}&dueDate=${encodeURIComponent(dueDate)}&status=${encodeURIComponent(status)}${assignedTo ? `&assignedTo=${encodeURIComponent(assignedTo)}` : ''}${priority ? `&priority=${encodeURIComponent(priority)}` : ''}${description ? `&description=${encodeURIComponent(description)}` : ''}${imageUrl ? `&imageUrl=${encodeURIComponent(imageUrl)}` : ''}`;
 
   return (
     <Card className="flex flex-col overflow-hidden shadow-lg transition-all hover:shadow-xl">
       <div className="relative h-48 w-full">
         <Image
-          src={imageUrl}
+          src={imageUrl || "https://placehold.co/600x400.png?text=Task+Image"}
           alt={taskName}
           layout="fill"
           objectFit="cover"
@@ -58,7 +79,10 @@ export default function MaintenanceTaskCard({
       <CardHeader>
         <div className="flex items-start justify-between">
           <CardTitle className="text-xl tracking-tight">{taskName}</CardTitle>
-          <Badge className={cn(statusColors[status], "text-white ml-2 shrink-0")}>{status}</Badge>
+          <Badge className={cn(statusColors[status], "text-white ml-2 shrink-0 flex items-center")}>
+            <StatusIcon className="mr-1 h-3.5 w-3.5" />
+            {status}
+          </Badge>
         </div>
         <CardDescription>Machine ID: {machineId}</CardDescription>
       </CardHeader>
@@ -75,18 +99,39 @@ export default function MaintenanceTaskCard({
         )}
         {priority && (
           <div className="flex items-center">
-            <span className="mr-2 text-muted-foreground">&#9679;</span> {/* Bullet point for priority */}
-            <span>Priority: <Badge variant={priority === 'High' ? 'destructive' : priority === 'Medium' ? 'secondary' : 'outline'}>{priority}</Badge></span>
+             <Badge variant={priority === 'High' ? 'destructive' : priority === 'Medium' ? 'secondary' : 'outline'} className="capitalize">{priority}</Badge>
           </div>
+        )}
+        {description && (
+          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{description}</p>
         )}
       </CardContent>
       <CardFooter className="gap-2 border-t pt-4">
-        <Button variant="outline" size="sm" className="flex-1">
-          <Edit3 className="mr-2 h-4 w-4" /> Edit
+        <Button variant="outline" size="sm" className="flex-1" asChild>
+          <Link href={editUrl}>
+            <Edit3 className="mr-2 h-4 w-4" /> Edit
+          </Link>
         </Button>
-        <Button variant="destructive" size="sm" className="flex-1">
-          <Trash2 className="mr-2 h-4 w-4" /> Delete
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" size="sm" className="flex-1">
+              <Trash2 className="mr-2 h-4 w-4" /> Delete
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the task
+                &quot;{taskName}&quot;.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={() => onDelete(id)}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardFooter>
     </Card>
   );
