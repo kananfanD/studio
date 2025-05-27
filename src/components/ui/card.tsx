@@ -1,3 +1,4 @@
+
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
@@ -30,10 +31,10 @@ const CardHeader = React.forwardRef<
 CardHeader.displayName = "CardHeader"
 
 const CardTitle = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
+  HTMLParagraphElement, // Changed from HTMLDivElement to be more semantic
+  React.HTMLAttributes<HTMLHeadingElement> // Changed from HTMLDivElement
 >(({ className, ...props }, ref) => (
-  <div
+  <h3 // Changed from div to h3 for semantic card titles
     ref={ref}
     className={cn(
       "text-2xl font-semibold leading-none tracking-tight",
@@ -45,10 +46,10 @@ const CardTitle = React.forwardRef<
 CardTitle.displayName = "CardTitle"
 
 const CardDescription = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
+  HTMLParagraphElement, // Changed from HTMLDivElement
+  React.HTMLAttributes<HTMLParagraphElement> // Changed from HTMLDivElement
 >(({ className, ...props }, ref) => (
-  <div
+  <p // Changed from div to p
     ref={ref}
     className={cn("text-sm text-muted-foreground", className)}
     {...props}

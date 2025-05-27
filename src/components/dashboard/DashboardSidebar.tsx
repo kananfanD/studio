@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -13,6 +14,7 @@ import {
   UserCircle2,
   ChevronDown,
   Settings2,
+  ClipboardList, // Added icon
 } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { Button } from '@/components/ui/button';
@@ -34,6 +36,7 @@ const navItems = [
   { href: '/dashboard/maintenance/daily', label: 'Daily Maintenance', icon: CalendarDays },
   { href: '/dashboard/maintenance/weekly', label: 'Weekly Maintenance', icon: CalendarCheck2 },
   { href: '/dashboard/maintenance/monthly', label: 'Monthly Maintenance', icon: CalendarClock },
+  { href: '/dashboard/inventory', label: 'Inventory Maintenance', icon: ClipboardList }, // New Nav Item
   { href: '/dashboard/stock', label: 'Component Stock', icon: Archive },
   { href: '/dashboard/manuals', label: 'Manuals', icon: BookOpenText },
 ];
