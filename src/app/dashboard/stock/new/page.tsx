@@ -7,6 +7,7 @@ import * as z from "zod";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 import PageHeader from "@/components/dashboard/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -32,7 +33,7 @@ const stockItemFormSchema = z.object({
   quantity: z.coerce.number().min(0, { message: "Quantity cannot be negative." }),
   location: z.string().min(1, { message: "Location is required." }),
   minStockLevel: z.coerce.number().min(0, { message: "Minimum stock level cannot be negative." }).optional(),
-  imageUrl: z.string().url({ message: "Please enter a valid Image URL." }).optional().or(z.literal('')),
+  imageUrl: z.string().optional().or(z.literal('')),
   dataAihint: z.string().max(60, {message: "AI Hint too long, max 60 characters"}).optional().describe("One or two keywords for Unsplash search, space separated."),
 });
 
@@ -57,6 +58,19 @@ export default function NewStockItemPage() {
       dataAihint: "",
     },
   });
+
+  const watchedImageUrl = form.watch("imageUrl");
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        form.setValue("imageUrl", reader.result as string, { shouldValidate: true });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   useEffect(() => {
     const id = searchParams.get("id");
@@ -203,15 +217,34 @@ export default function NewStockItemPage() {
                 name="imageUrl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Image URL (Optional)</FormLabel>
+                    <FormLabel>Image (Optional)</FormLabel>
                     <FormControl>
-                      <Input type="url" placeholder="https://placehold.co/600x400.png" {...field} value={field.value ?? ''} />
+                      <Input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleImageUpload}
+                      />
                     </FormControl>
-                    <FormDescription>If left blank, a default placeholder will be used. e.g., https://placehold.co/600x400.png?text=My+Part</FormDescription>
+                    <FormDescription>Upload an image for the component.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              {watchedImageUrl && (
+                <div className="mt-4">
+                  <FormLabel>Image Preview</FormLabel>
+                  <div className="relative mt-2 h-48 w-full max-w-xs rounded-md border bg-muted/30 flex items-center justify-center">
+                    <Image
+                      src={watchedImageUrl}
+                      alt="Image Preview"
+                      layout="fill"
+                      objectFit="contain"
+                      className="rounded-md"
+                      data-ai-hint="component image"
+                    />
+                  </div>
+                </div>
+              )}
               <FormField
                 control={form.control}
                 name="dataAihint"
@@ -221,7 +254,7 @@ export default function NewStockItemPage() {
                     <FormControl>
                       <Input placeholder="e.g., bearing metal" {...field} value={field.value ?? ''} />
                     </FormControl>
-                    <FormDescription>One or two keywords for AI image search if no Image URL is provided.</FormDescription>
+                    <FormDescription>One or two keywords for AI image search if no Image is uploaded or URL provided.</FormDescription>
                      <FormMessage />
                   </FormItem>
                 )}

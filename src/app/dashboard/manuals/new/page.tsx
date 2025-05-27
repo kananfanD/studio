@@ -7,6 +7,7 @@ import * as z from "zod";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 import PageHeader from "@/components/dashboard/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -31,8 +32,8 @@ const manualFormSchema = z.object({
   machineType: z.string().min(1, { message: "Machine type is required." }),
   version: z.string().optional(),
   lastUpdated: z.string().optional(),
-  pdfUrl: z.string().url({ message: "Please enter a valid PDF URL." }),
-  coverImageUrl: z.string().url({ message: "Please enter a valid Cover Image URL." }).optional().or(z.literal('')),
+  pdfUrl: z.string().url({ message: "Please enter a valid PDF URL." }), // PDF is still a URL
+  coverImageUrl: z.string().optional().or(z.literal('')), // For uploaded cover image or URL
   dataAihint: z.string().max(60, {message: "AI Hint too long, max 60 characters"}).optional().describe("One or two keywords for Unsplash search, space separated."),
 });
 
@@ -57,6 +58,19 @@ export default function NewManualPage() {
       dataAihint: "",
     },
   });
+
+  const watchedCoverImageUrl = form.watch("coverImageUrl");
+
+  const handleCoverImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        form.setValue("coverImageUrl", reader.result as string, { shouldValidate: true });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   useEffect(() => {
     const id = searchParams.get("id");
@@ -192,6 +206,7 @@ export default function NewManualPage() {
                     <FormControl>
                       <Input type="url" placeholder="https://example.com/manual.pdf" {...field} />
                     </FormControl>
+                     <FormDescription>The URL to the PDF document.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -201,15 +216,34 @@ export default function NewManualPage() {
                 name="coverImageUrl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Cover Image URL (Optional)</FormLabel>
+                    <FormLabel>Cover Image (Optional)</FormLabel>
                     <FormControl>
-                      <Input type="url" placeholder="https://placehold.co/600x400.png" {...field} value={field.value ?? ''} />
+                      <Input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleCoverImageUpload}
+                      />
                     </FormControl>
-                    <FormDescription>If left blank, a default placeholder will be used. e.g., https://placehold.co/600x400.png?text=My+Manual </FormDescription>
+                    <FormDescription>Upload a cover image for the manual. If left blank, a default placeholder will be used. You can also still provide an external URL in this field if you manually type/paste it.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              {watchedCoverImageUrl && (
+                <div className="mt-4">
+                  <FormLabel>Cover Image Preview</FormLabel>
+                  <div className="relative mt-2 h-64 w-full max-w-xs rounded-md border bg-muted/30 flex items-center justify-center">
+                    <Image
+                      src={watchedCoverImageUrl}
+                      alt="Cover Image Preview"
+                      layout="fill"
+                      objectFit="contain"
+                      className="rounded-md"
+                      data-ai-hint="manual cover"
+                    />
+                  </div>
+                </div>
+              )}
                <FormField
                 control={form.control}
                 name="dataAihint"
@@ -219,7 +253,7 @@ export default function NewManualPage() {
                     <FormControl>
                       <Input placeholder="e.g., cnc machine" {...field} value={field.value ?? ''} />
                     </FormControl>
-                    <FormDescription>One or two keywords for AI image search if no Cover Image URL is provided.</FormDescription>
+                    <FormDescription>One or two keywords for AI image search if no Cover Image is uploaded or URL provided.</FormDescription>
                      <FormMessage />
                   </FormItem>
                 )}

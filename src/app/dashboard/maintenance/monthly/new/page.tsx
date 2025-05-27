@@ -7,6 +7,7 @@ import * as z from "zod";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 import PageHeader from "@/components/dashboard/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,7 @@ const taskFormSchema = z.object({
   priority: z.enum(["Low", "Medium", "High"]).optional(),
   description: z.string().optional(),
   status: z.enum(["Pending", "In Progress", "Completed", "Overdue"]).default("Pending"),
-  imageUrl: z.string().url({ message: "Please enter a valid Image URL." }).optional().or(z.literal('')),
+  imageUrl: z.string().optional().or(z.literal('')),
 });
 
 type TaskFormValues = z.infer<typeof taskFormSchema>;
@@ -62,6 +63,19 @@ export default function NewMonthlyTaskPage() {
       imageUrl: "",
     },
   });
+
+  const watchedImageUrl = form.watch("imageUrl");
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        form.setValue("imageUrl", reader.result as string, { shouldValidate: true });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   useEffect(() => {
     const id = searchParams.get("id");
@@ -262,15 +276,34 @@ export default function NewMonthlyTaskPage() {
                 name="imageUrl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Image URL (Optional)</FormLabel>
+                    <FormLabel>Image (Optional)</FormLabel>
                     <FormControl>
-                      <Input type="url" placeholder="https://placehold.co/600x400.png" {...field} value={field.value ?? ''} />
+                      <Input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleImageUpload}
+                      />
                     </FormControl>
-                    <FormDescription>If left blank, a default placeholder will be used. e.g., https://placehold.co/600x400.png?text=My+Image</FormDescription>
+                    <FormDescription>Upload an image for the task.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              {watchedImageUrl && (
+                <div className="mt-4">
+                  <FormLabel>Image Preview</FormLabel>
+                  <div className="relative mt-2 h-48 w-full max-w-xs rounded-md border bg-muted/30 flex items-center justify-center">
+                    <Image
+                      src={watchedImageUrl}
+                      alt="Image Preview"
+                      layout="fill"
+                      objectFit="contain"
+                      className="rounded-md"
+                      data-ai-hint="task image monthly"
+                    />
+                  </div>
+                </div>
+              )}
               <div className="flex justify-end space-x-2 pt-4">
                 <Button type="button" variant="outline" onClick={() => router.back()}>
                   Cancel
