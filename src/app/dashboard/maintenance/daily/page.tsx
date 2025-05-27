@@ -2,6 +2,7 @@ import PageHeader from "@/components/dashboard/PageHeader";
 import MaintenanceTaskCard, { TaskStatus } from "@/components/maintenance/MaintenanceTaskCard";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
+import Link from "next/link";
 
 const dailyTasks: { id: string; taskName: string; machineId: string; dueDate: string; status: TaskStatus; assignedTo?: string; priority?: "Low" | "Medium" | "High" }[] = [
   { id: "dt001", taskName: "Oil Level Check - Unit A", machineId: "CNC-001", dueDate: "Today", status: "Pending", assignedTo: "John Doe", priority: "High" },
@@ -17,8 +18,10 @@ export default function DailyMaintenancePage() {
         title="Daily Maintenance Tasks"
         description="Manage and track all daily maintenance activities."
       >
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" /> Add New Daily Task
+        <Button asChild>
+          <Link href="/dashboard/maintenance/daily/new">
+            <PlusCircle className="mr-2 h-4 w-4" /> Add New Daily Task
+          </Link>
         </Button>
       </PageHeader>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

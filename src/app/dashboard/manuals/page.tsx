@@ -1,7 +1,8 @@
 import PageHeader from "@/components/dashboard/PageHeader";
 import ManualCard from "@/components/manuals/ManualCard";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, UploadCloud } from "lucide-react";
+import { PlusCircle, UploadCloud, BookOpenText } from "lucide-react"; // Ensured BookOpenText is imported
+import Link from "next/link";
 
 const manuals = [
   { id: "man001", manualTitle: "CNC Mill XM500 Operator Manual", machineType: "CNC XM500", version: "3.1", lastUpdated: "2023-05-15", pdfUrl: "/manuals/cnc_xm500_op.pdf", coverImageUrl: "https://placehold.co/600x400.png?text=CNC+Manual" , dataAihint:"cnc machine"},
@@ -16,8 +17,10 @@ export default function ManualBookPage() {
         title="Maintenance Manuals"
         description="Access and manage all technical manuals and guides."
       >
-        <Button>
-          <UploadCloud className="mr-2 h-4 w-4" /> Upload New Manual
+        <Button asChild>
+          <Link href="/dashboard/manuals/new">
+            <UploadCloud className="mr-2 h-4 w-4" /> Upload New Manual
+          </Link>
         </Button>
       </PageHeader>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -31,8 +34,10 @@ export default function ManualBookPage() {
             <h3 className="mt-2 text-sm font-medium text-foreground">No manuals found</h3>
             <p className="mt-1 text-sm text-muted-foreground">Get started by uploading a new manual.</p>
             <div className="mt-6">
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" /> Upload Manual
+              <Button asChild>
+                <Link href="/dashboard/manuals/new">
+                  <PlusCircle className="mr-2 h-4 w-4" /> Upload Manual
+                </Link>
               </Button>
             </div>
           </div>

@@ -2,6 +2,7 @@ import PageHeader from "@/components/dashboard/PageHeader";
 import MaintenanceTaskCard, { TaskStatus } from "@/components/maintenance/MaintenanceTaskCard";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
+import Link from "next/link";
 
 const monthlyTasks: { id: string; taskName: string; machineId: string; dueDate: string; status: TaskStatus; assignedTo?: string; priority?: "Low" | "Medium" | "High" }[] = [
   { id: "mt001", taskName: "Full System Diagnostics - Unit A", machineId: "CNC-001", dueDate: "End of Month", status: "Pending", priority: "High"},
@@ -16,8 +17,10 @@ export default function MonthlyMaintenancePage() {
         title="Monthly Maintenance Tasks"
         description="Oversee and log comprehensive monthly maintenance checks."
       >
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" /> Add New Monthly Task
+        <Button asChild>
+          <Link href="/dashboard/maintenance/monthly/new">
+            <PlusCircle className="mr-2 h-4 w-4" /> Add New Monthly Task
+          </Link>
         </Button>
       </PageHeader>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

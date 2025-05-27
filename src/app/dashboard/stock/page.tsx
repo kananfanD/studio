@@ -2,6 +2,7 @@ import PageHeader from "@/components/dashboard/PageHeader";
 import StockItemCard from "@/components/stock/StockItemCard";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
+import Link from "next/link";
 
 const stockItems = [
   { id: "stk001", componentName: "Bearing SKF-6205", partNumber: "SKF-6205-2Z", quantity: 50, location: "Shelf A1", minStockLevel: 10, imageUrl: "https://placehold.co/600x400.png?text=Bearing" , dataAihint:"bearing metal"},
@@ -17,8 +18,10 @@ export default function ComponentStockPage() {
         title="Component Stock Management"
         description="Track inventory levels for all machine components."
       >
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" /> Add New Component
+        <Button asChild>
+          <Link href="/dashboard/stock/new">
+            <PlusCircle className="mr-2 h-4 w-4" /> Add New Component
+          </Link>
         </Button>
       </PageHeader>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
