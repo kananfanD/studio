@@ -7,6 +7,8 @@ import autoTable from 'jspdf-autotable';
 import PageHeader from "@/components/dashboard/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card"; // Added import
+import { Badge } from "@/components/ui/badge"; // Added import
 import { Download, ClipboardList } from "lucide-react";
 import type { TaskStatus } from "@/components/maintenance/MaintenanceTaskCard";
 import type { DailyTask } from "../maintenance/daily/page";
@@ -70,7 +72,16 @@ export default function InventoryMaintenancePage() {
       
       // Sort tasks by due date (simple string sort, might need improvement for actual date sorting)
       // For robust date sorting, convert dueDate to Date objects before comparison
-      allTasks.sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+      allTasks.sort((a, b) => {
+        // Try to parse dueDates, fallback to localeCompare if parsing fails or dates are not standard
+        const dateA = new Date(a.dueDate);
+        const dateB = new Date(b.dueDate);
+
+        if (!isNaN(dateA.getTime()) && !isNaN(dateB.getTime())) {
+          return dateA.getTime() - dateB.getTime();
+        }
+        return a.dueDate.localeCompare(b.dueDate);
+      });
       setCombinedTasks(allTasks);
     };
 
@@ -78,8 +89,10 @@ export default function InventoryMaintenancePage() {
     setHasInitialized(true);
 
     // Optional: Listen for storage changes to update if tasks are modified elsewhere
-    const handleStorageChange = () => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'dailyTasks' || event.key === 'weeklyTasks' || event.key === 'monthlyTasks') {
         loadTasks();
+      }
     };
     window.addEventListener('storage', handleStorageChange);
     return () => {
@@ -136,7 +149,7 @@ export default function InventoryMaintenancePage() {
         title="Maintenance Task Inventory"
         description="A consolidated view of all daily, weekly, and monthly maintenance tasks."
       >
-        <Button onClick={handleDownloadPdf}>
+        <Button onClick={handleDownloadPdf} disabled={combinedTasks.length === 0}>
           <Download className="mr-2 h-4 w-4" />
           Download PDF
         </Button>
@@ -157,14 +170,14 @@ export default function InventoryMaintenancePage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[200px]">Task Name</TableHead>
-                    <TableHead>Machine ID</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Due Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Priority</TableHead>
-                    <TableHead>Assigned To</TableHead>
-                    <TableHead className="w-[250px]">Description</TableHead>
+                    <TableHead className="w-[200px] text-foreground">Task Name</TableHead>
+                    <TableHead className="text-foreground">Machine ID</TableHead>
+                    <TableHead className="text-foreground">Type</TableHead>
+                    <TableHead className="text-foreground">Due Date</TableHead>
+                    <TableHead className="text-foreground">Status</TableHead>
+                    <TableHead className="text-foreground">Priority</TableHead>
+                    <TableHead className="text-foreground">Assigned To</TableHead>
+                    <TableHead className="w-[250px] text-foreground">Description</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -188,11 +201,11 @@ export default function InventoryMaintenancePage() {
                       <TableCell>
                         <Badge 
                            className={
-                            task.status === "Completed" ? "bg-green-500 hover:bg-green-600" :
-                            task.status === "Pending" ? "bg-blue-500 hover:bg-blue-600" :
+                            task.status === "Completed" ? "bg-green-500 hover:bg-green-600 text-primary-foreground" :
+                            task.status === "Pending" ? "bg-blue-500 hover:bg-blue-600 text-primary-foreground" :
                             task.status === "In Progress" ? "bg-yellow-500 hover:bg-yellow-600 text-black" :
-                            task.status === "Overdue" ? "bg-red-600 hover:bg-red-700" :
-                            "bg-gray-400"
+                            task.status === "Overdue" ? "bg-red-600 hover:bg-red-700 text-destructive-foreground" :
+                            "bg-gray-400 text-white"
                            }
                         >
                           {task.status}
@@ -202,9 +215,9 @@ export default function InventoryMaintenancePage() {
                         <Badge 
                           variant={task.priority === 'High' ? 'destructive' : task.priority === 'Medium' ? 'secondary' : 'outline'}
                           className={
-                            task.priority === "High" ? "" :
+                            task.priority === "High" ? "" : // destructive variant handles colors
                             task.priority === "Medium" ? "bg-yellow-500 border-yellow-500 text-black hover:bg-yellow-600" :
-                            "bg-gray-400 border-gray-400 text-white hover:bg-gray-500"
+                            "border-gray-400 text-muted-foreground hover:bg-gray-100" // More theme-friendly for Low
                           }
                         >
                           {task.priority || "N/A"}
@@ -223,3 +236,4 @@ export default function InventoryMaintenancePage() {
     </>
   );
 }
+
