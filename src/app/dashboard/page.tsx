@@ -1,7 +1,8 @@
 import PageHeader from "@/components/dashboard/PageHeader";
 import StatCard from "@/components/dashboard/StatCard";
 import { Button } from "@/components/ui/button";
-import { CalendarClock, AlertTriangle, PackageCheck, Wrench, PlusCircle, ListChecks, CheckCircle2 } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { CalendarClock, AlertTriangle, PackageCheck, Wrench, PlusCircle, ListChecks, CheckCircle2, BookOpenText } from "lucide-react";
 import Link from "next/link";
 
 export default function DashboardPage() {
