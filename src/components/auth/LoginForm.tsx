@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -41,12 +42,17 @@ export default function LoginForm() {
   function onSubmit(values: z.infer<typeof formSchema>) {
     // Simulate API call
     console.log("Login submitted:", values);
+    
+    // In a real app, you'd call an auth API here.
+    // For scaffolding, we set a flag in localStorage and navigate.
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('equipCareUserLoggedIn', 'true');
+    }
+
     toast({
       title: "Login Successful",
       description: "Redirecting to dashboard...",
     });
-    // In a real app, you'd call an auth API here.
-    // For scaffolding, we just navigate.
     router.push("/dashboard");
   }
 

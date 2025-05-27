@@ -63,47 +63,52 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
   const [userAvatarUrl, setUserAvatarUrl] = useState(DEFAULT_AVATAR_PLACEHOLDER);
 
   const loadProfile = () => {
-    const storedProfileString = localStorage.getItem("userProfile");
-    if (storedProfileString) {
-      try {
-        const storedProfile: UserProfile = JSON.parse(storedProfileString);
-        setUserName(storedProfile.name || DEFAULT_USER_NAME);
-        setUserAvatarUrl(storedProfile.avatarUrl || DEFAULT_AVATAR_PLACEHOLDER);
-      } catch (e) {
-        console.error("Failed to parse userProfile from localStorage in sidebar", e);
-        setUserName(DEFAULT_USER_NAME);
-        setUserAvatarUrl(DEFAULT_AVATAR_PLACEHOLDER);
+    if (typeof window !== 'undefined') {
+      const storedProfileString = localStorage.getItem("userProfile");
+      if (storedProfileString) {
+        try {
+          const storedProfile: UserProfile = JSON.parse(storedProfileString);
+          setUserName(storedProfile.name || DEFAULT_USER_NAME);
+          setUserAvatarUrl(storedProfile.avatarUrl || DEFAULT_AVATAR_PLACEHOLDER);
+        } catch (e) {
+          console.error("Failed to parse userProfile from localStorage in sidebar", e);
+          setUserName(DEFAULT_USER_NAME);
+          setUserAvatarUrl(DEFAULT_AVATAR_PLACEHOLDER);
+        }
+      } else {
+          setUserName(DEFAULT_USER_NAME);
+          setUserAvatarUrl(DEFAULT_AVATAR_PLACEHOLDER);
       }
-    } else {
-        setUserName(DEFAULT_USER_NAME);
-        setUserAvatarUrl(DEFAULT_AVATAR_PLACEHOLDER);
     }
   };
 
   useEffect(() => {
-    loadProfile(); // Load profile on initial mount
+    loadProfile(); 
 
-    // Listen for storage changes to update profile if changed elsewhere
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === 'userProfile') {
         loadProfile();
       }
     };
-    window.addEventListener('storage', handleStorageChange);
-    return () => {
-        window.removeEventListener('storage', handleStorageChange);
-    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', handleStorageChange);
+      return () => {
+          window.removeEventListener('storage', handleStorageChange);
+      };
+    }
   }, []);
 
 
   const handleLogout = () => {
-    console.log("User logged out");
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem("equipCareUserLoggedIn");
+      // Optionally clear userProfile from localStorage on logout
+      // localStorage.removeItem("userProfile"); 
+    }
     toast({
       title: "Logged Out",
       description: "You have been successfully logged out.",
     });
-    // Optionally clear userProfile from localStorage on logout
-    // localStorage.removeItem("userProfile"); 
     router.push('/'); 
   };
 
@@ -190,5 +195,3 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
     </aside>
   );
 }
-
-    
