@@ -23,7 +23,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, FileText } from "lucide-react";
 import type { Manual } from "./../page";
 
 const manualFormSchema = z.object({
@@ -32,8 +32,8 @@ const manualFormSchema = z.object({
   machineType: z.string().min(1, { message: "Machine type is required." }),
   version: z.string().optional(),
   lastUpdated: z.string().optional(),
-  pdfUrl: z.string().url({ message: "Please enter a valid PDF URL." }), // PDF is still a URL
-  coverImageUrl: z.string().optional().or(z.literal('')), // For uploaded cover image or URL
+  pdfUrl: z.string().optional().or(z.literal('')), // Can be a data URI or external URL, or empty
+  coverImageUrl: z.string().optional().or(z.literal('')), 
   dataAihint: z.string().max(60, {message: "AI Hint too long, max 60 characters"}).optional().describe("One or two keywords for Unsplash search, space separated."),
 });
 
@@ -60,6 +60,7 @@ export default function NewManualPage() {
   });
 
   const watchedCoverImageUrl = form.watch("coverImageUrl");
+  const watchedPdfUrl = form.watch("pdfUrl");
 
   const handleCoverImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -72,11 +73,31 @@ export default function NewManualPage() {
     }
   };
 
+  const handlePdfUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type === "application/pdf") {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        form.setValue("pdfUrl", reader.result as string, { shouldValidate: true });
+      };
+      reader.readAsDataURL(file);
+    } else if (file) {
+      form.setValue("pdfUrl", "", { shouldValidate: true }); // Clear if invalid file was previously set
+      form.setError("pdfUrl", { type: "manual", message: "Please upload a valid PDF file." });
+    } else {
+       // If user cancels file selection, clear the PDF URL or handle as needed
+       // form.setValue("pdfUrl", ""); // Optional: clear if no file selected
+    }
+  };
+
   useEffect(() => {
     const id = searchParams.get("id");
     if (id) {
       setIsEditMode(true);
       setManualIdToEdit(id);
+      // Instead of relying on potentially very long data URIs in query params,
+      // ideally, we'd fetch the full manual object from localStorage here using the ID.
+      // For now, we'll proceed with query params but be mindful of URL length limits.
       const manualTitle = searchParams.get("manualTitle");
       const machineType = searchParams.get("machineType");
       const version = searchParams.get("version");
@@ -112,7 +133,7 @@ export default function NewManualPage() {
       const newManual: Manual = {
         ...data,
         id: `man${Date.now()}`,
-        pdfUrl: data.pdfUrl || "#", // Ensure pdfUrl is not empty
+        pdfUrl: data.pdfUrl || "", // Ensure pdfUrl is empty string if not provided
       };
       manuals.push(newManual);
       toast({
@@ -200,17 +221,41 @@ export default function NewManualPage() {
               <FormField
                 control={form.control}
                 name="pdfUrl"
-                render={({ field }) => (
+                render={({ field }) => ( // field is not directly used for file input value
                   <FormItem>
-                    <FormLabel>PDF URL</FormLabel>
+                    <FormLabel>PDF Document</FormLabel>
                     <FormControl>
-                      <Input type="url" placeholder="https://example.com/manual.pdf" {...field} />
+                      <Input 
+                        type="file" 
+                        accept="application/pdf" 
+                        onChange={handlePdfUpload}
+                        // value is not set directly for file inputs
+                      />
                     </FormControl>
-                     <FormDescription>The URL to the PDF document.</FormDescription>
+                     <FormDescription>Upload the PDF document for the manual. If a PDF was previously set, uploading a new one will replace it.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              {watchedPdfUrl && (
+                <div className="mt-2 text-sm p-3 border rounded-md bg-muted/30">
+                  <p className="font-medium text-foreground flex items-center">
+                    <FileText className="mr-2 h-4 w-4 text-primary" /> Current PDF:
+                  </p>
+                  {watchedPdfUrl.startsWith('data:application/pdf;base64,') ? (
+                    <>
+                      <p className="text-muted-foreground mt-1">A PDF file has been uploaded.</p>
+                      <a href={watchedPdfUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs block mt-1">View Uploaded PDF</a>
+                    </>
+                  ) : ( // Assumed to be an external URL
+                    <p className="text-muted-foreground mt-1">
+                      URL: <a href={watchedPdfUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline break-all">{watchedPdfUrl}</a>
+                    </p>
+                  )}
+                   <p className="text-xs text-muted-foreground mt-2">Uploading a new PDF will replace the current one.</p>
+                </div>
+              )}
+
               <FormField
                 control={form.control}
                 name="coverImageUrl"
@@ -222,9 +267,10 @@ export default function NewManualPage() {
                         type="file" 
                         accept="image/*" 
                         onChange={handleCoverImageUpload}
+                        // value is not set here for file inputs
                       />
                     </FormControl>
-                    <FormDescription>Upload a cover image for the manual. If left blank, a default placeholder will be used. You can also still provide an external URL in this field if you manually type/paste it.</FormDescription>
+                    <FormDescription>Upload a cover image for the manual. If left blank, a default placeholder will be used. Replaces any existing image/URL.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -273,3 +319,5 @@ export default function NewManualPage() {
     </>
   );
 }
+
+    
