@@ -30,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from 'react';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -46,10 +47,54 @@ interface DashboardSidebarProps {
   onToggle: () => void;
 }
 
+interface UserProfile {
+  name: string;
+  avatarUrl: string;
+}
+
+const DEFAULT_AVATAR_PLACEHOLDER = "https://placehold.co/40x40.png";
+const DEFAULT_USER_NAME = "User Name";
+
 export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
+  const [userName, setUserName] = useState(DEFAULT_USER_NAME);
+  const [userAvatarUrl, setUserAvatarUrl] = useState(DEFAULT_AVATAR_PLACEHOLDER);
+
+  const loadProfile = () => {
+    const storedProfileString = localStorage.getItem("userProfile");
+    if (storedProfileString) {
+      try {
+        const storedProfile: UserProfile = JSON.parse(storedProfileString);
+        setUserName(storedProfile.name || DEFAULT_USER_NAME);
+        setUserAvatarUrl(storedProfile.avatarUrl || DEFAULT_AVATAR_PLACEHOLDER);
+      } catch (e) {
+        console.error("Failed to parse userProfile from localStorage in sidebar", e);
+        setUserName(DEFAULT_USER_NAME);
+        setUserAvatarUrl(DEFAULT_AVATAR_PLACEHOLDER);
+      }
+    } else {
+        setUserName(DEFAULT_USER_NAME);
+        setUserAvatarUrl(DEFAULT_AVATAR_PLACEHOLDER);
+    }
+  };
+
+  useEffect(() => {
+    loadProfile(); // Load profile on initial mount
+
+    // Listen for storage changes to update profile if changed elsewhere
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'userProfile') {
+        loadProfile();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+        window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
 
   const handleLogout = () => {
     console.log("User logged out");
@@ -57,7 +102,9 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
       title: "Logged Out",
       description: "You have been successfully logged out.",
     });
-    router.push('/'); // Redirect to login page
+    // Optionally clear userProfile from localStorage on logout
+    // localStorage.removeItem("userProfile"); 
+    router.push('/'); 
   };
 
   return (
@@ -68,7 +115,7 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
       <div
         className={cn(
           "flex h-16 items-center border-b border-sidebar-border px-6 transition-colors hover:bg-sidebar-accent",
-          isOpen ? "justify-center" : "justify-center px-0", // Adjust padding when collapsed
+          isOpen ? "justify-start" : "justify-center px-0", 
           "cursor-pointer"
         )}
         onClick={onToggle}
@@ -77,9 +124,9 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onToggle(); }}
         title={isOpen ? "Collapse sidebar" : "Expand sidebar"}
       >
-        <Logo iconSize={6} textSize="text-xl" hideText={!isOpen} />
+        <Logo iconSize={6} textSize="text-xl" hideText={!isOpen} className="ml-0" />
       </div>
-      <nav className="flex-1 space-y-1 overflow-y-auto p-2"> {/* Reduced padding for nav */}
+      <nav className="flex-1 space-y-1 overflow-y-auto p-2">
         {navItems.map((item) => (
           <Link key={item.label} href={item.href} passHref>
             <Button
@@ -89,9 +136,9 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
                 pathname === item.href
                 ? "bg-sidebar-accent text-sidebar-accent-foreground"
                 : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                !isOpen && "justify-center h-12 w-12 p-0" // Centered icon, fixed size when collapsed
+                !isOpen && "justify-center h-12 w-12 p-0" 
               )}
-              title={item.label} // Tooltip for collapsed state
+              title={item.label} 
             >
               <item.icon className={cn("mr-3 h-5 w-5", !isOpen && "mr-0")} />
               {isOpen && item.label}
@@ -100,7 +147,7 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
         ))}
       </nav>
       <Separator className="bg-sidebar-border" />
-      <div className={cn("p-2", !isOpen && "p-1")}> {/* Reduced padding for footer */}
+      <div className={cn("p-2", !isOpen && "p-1")}>
          <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button 
@@ -112,19 +159,21 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
               title="My Account"
             >
               <Avatar className={cn("mr-3 h-8 w-8", !isOpen && "mr-0")}>
-                <AvatarImage src="https://placehold.co/40x40.png" alt="User Avatar" data-ai-hint="user profile" />
-                <AvatarFallback>U</AvatarFallback>
+                <AvatarImage src={userAvatarUrl} alt={userName} data-ai-hint="user profile" />
+                <AvatarFallback>{userName ? userName.charAt(0).toUpperCase() : "U"}</AvatarFallback>
               </Avatar>
-              {isOpen && <span className="flex-1 text-left">User Name</span>}
-              {isOpen && <ChevronDown className="ml-auto h-4 w-4" />}
+              {isOpen && <span className="flex-1 text-left truncate">{userName}</span>}
+              {isOpen && <ChevronDown className="ml-auto h-4 w-4 shrink-0" />}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56 mb-1" side={isOpen ? "top" : "right"} align={isOpen ? "start" : "center"} sideOffset={isOpen ? 0 : 8}>
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <UserCircle2 className="mr-2 h-4 w-4" />
-              <span>Profile</span>
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard/profile">
+                <UserCircle2 className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Settings2 className="mr-2 h-4 w-4" />
@@ -141,3 +190,5 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
     </aside>
   );
 }
+
+    
