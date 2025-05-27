@@ -30,22 +30,29 @@ const initialStockItems: StockItem[] = [
 
 export default function ComponentStockPage() {
   const [stockItems, setStockItems] = useState<StockItem[]>([]);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     const storedItems = localStorage.getItem("stockItems");
     if (storedItems) {
-      setStockItems(JSON.parse(storedItems));
+      try {
+        setStockItems(JSON.parse(storedItems));
+      } catch (e) {
+        console.error("Failed to parse stockItems from localStorage", e);
+        setStockItems(initialStockItems);
+      }
     } else {
       setStockItems(initialStockItems);
     }
+    setHasInitialized(true);
   }, []);
 
   useEffect(() => {
-    if (stockItems.length > 0 || localStorage.getItem("stockItems")){
+    if (hasInitialized){
         localStorage.setItem("stockItems", JSON.stringify(stockItems));
     }
-  }, [stockItems]);
+  }, [stockItems, hasInitialized]);
 
   const handleDeleteItem = (itemId: string) => {
     setStockItems(prevItems => prevItems.filter(item => item.id !== itemId));
@@ -75,6 +82,8 @@ export default function ComponentStockPage() {
             {...item} 
             onDelete={() => handleDeleteItem(item.id)}
             editPath="/dashboard/stock/new"
+            imageUrl={item.imageUrl || "https://placehold.co/600x400.png"}
+            dataAihint={item.dataAihint}
           />
         ))}
       </div>

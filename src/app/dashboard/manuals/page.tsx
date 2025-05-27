@@ -28,22 +28,29 @@ const initialManuals: Manual[] = [
 
 export default function ManualBookPage() {
   const [manuals, setManuals] = useState<Manual[]>([]);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     const storedManuals = localStorage.getItem("manuals");
     if (storedManuals) {
-      setManuals(JSON.parse(storedManuals));
+      try {
+        setManuals(JSON.parse(storedManuals));
+      } catch (e) {
+        console.error("Failed to parse manuals from localStorage", e);
+        setManuals(initialManuals);
+      }
     } else {
       setManuals(initialManuals);
     }
+    setHasInitialized(true);
   }, []);
 
   useEffect(() => {
-   if(manuals.length > 0 || localStorage.getItem("manuals")) {
+   if(hasInitialized) {
     localStorage.setItem("manuals", JSON.stringify(manuals));
    }
-  }, [manuals]);
+  }, [manuals, hasInitialized]);
 
   const handleDeleteManual = (manualId: string) => {
     setManuals(prevManuals => prevManuals.filter(manual => manual.id !== manualId));
@@ -73,6 +80,8 @@ export default function ManualBookPage() {
             {...manual} 
             onDelete={() => handleDeleteManual(manual.id)}
             editPath="/dashboard/manuals/new"
+            coverImageUrl={manual.coverImageUrl || "https://placehold.co/600x400.png"}
+            dataAihint={manual.dataAihint}
           />
         ))}
         {manuals.length === 0 && (

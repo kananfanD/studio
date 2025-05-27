@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
-import MaintenanceTaskCard, { TaskStatus } from "@/components/maintenance/MaintenanceTaskCard";
+import MaintenanceTaskCard, { type TaskStatus } from "@/components/maintenance/MaintenanceTaskCard";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import Link from "next/link";
@@ -22,29 +22,36 @@ export interface WeeklyTask {
 }
 
 const initialWeeklyTasks: WeeklyTask[] = [
-  { id: "wt001", taskName: "Lubrication - Main Gearbox", machineId: "CNC-001", dueDate: "This Week", status: "Pending", assignedTo: "Team A", priority: "High", description: "Lubricate main gearbox as per schedule.", imageUrl: "https://placehold.co/600x400.png?text=Lubrication" },
-  { id: "wt002", taskName: "Belt Tension Check - Unit C", machineId: "MOTOR-003", dueDate: "This Week", status: "Pending", assignedTo: "Sarah Connor", priority: "Medium", description: "Check and adjust belt tension.", imageUrl: "https://placehold.co/600x400.png?text=Belt+Check" },
-  { id: "wt003", taskName: "Safety System Test - All Units", machineId: "ALL", dueDate: "End of Week", status: "In Progress", priority: "High", description: "Test all safety interlocks and e-stops.", imageUrl: "https://placehold.co/600x400.png?text=Safety+Test"},
+  { id: "wt001", taskName: "Lubrication - Main Gearbox", machineId: "CNC-001", dueDate: "This Week", status: "Pending", assignedTo: "Team A", priority: "High", description: "Lubricate main gearbox as per schedule.", imageUrl: "https://placehold.co/600x400.png" },
+  { id: "wt002", taskName: "Belt Tension Check - Unit C", machineId: "MOTOR-003", dueDate: "This Week", status: "Pending", assignedTo: "Sarah Connor", priority: "Medium", description: "Check and adjust belt tension.", imageUrl: "https://placehold.co/600x400.png" },
+  { id: "wt003", taskName: "Safety System Test - All Units", machineId: "ALL", dueDate: "End of Week", status: "In Progress", priority: "High", description: "Test all safety interlocks and e-stops.", imageUrl: "https://placehold.co/600x400.png"},
 ];
 
 export default function WeeklyMaintenancePage() {
   const [weeklyTasks, setWeeklyTasks] = useState<WeeklyTask[]>([]);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     const storedTasks = localStorage.getItem("weeklyTasks");
     if (storedTasks) {
-      setWeeklyTasks(JSON.parse(storedTasks));
+      try {
+        setWeeklyTasks(JSON.parse(storedTasks));
+      } catch (e) {
+        console.error("Failed to parse weeklyTasks from localStorage", e);
+        setWeeklyTasks(initialWeeklyTasks); 
+      }
     } else {
       setWeeklyTasks(initialWeeklyTasks);
     }
+    setHasInitialized(true);
   }, []);
 
   useEffect(() => {
-    if (weeklyTasks.length > 0 || localStorage.getItem("weeklyTasks")) {
+    if (hasInitialized) {
      localStorage.setItem("weeklyTasks", JSON.stringify(weeklyTasks));
     }
-  }, [weeklyTasks]);
+  }, [weeklyTasks, hasInitialized]);
 
   const handleDeleteTask = (taskId: string) => {
     setWeeklyTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
@@ -74,6 +81,7 @@ export default function WeeklyMaintenancePage() {
             {...task} 
             onDelete={() => handleDeleteTask(task.id)}
             editPath="/dashboard/maintenance/weekly/new"
+            imageUrl={task.imageUrl || "https://placehold.co/600x400.png"}
           />
         ))}
       </div>
