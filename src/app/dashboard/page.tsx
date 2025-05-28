@@ -1,8 +1,20 @@
+
 import PageHeader from "@/components/dashboard/PageHeader";
 import StatCard from "@/components/dashboard/StatCard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CalendarClock, AlertTriangle, PackageCheck, Wrench, PlusCircle, ListChecks, CheckCircle2, BookOpenText } from "lucide-react";
+import { 
+  CalendarClock, 
+  AlertTriangle, 
+  PackageCheck, 
+  Wrench, 
+  PlusCircle, 
+  ListChecks, 
+  CheckCircle2, 
+  BookOpenText,
+  CalendarCheck2, // Added for Weekly Maintenance
+  ClipboardList   // Added for Inventory Maintenance
+} from "lucide-react";
 import Link from "next/link";
 
 export default function DashboardPage() {
@@ -63,6 +75,33 @@ export default function DashboardPage() {
               <div>
                 <h3 className="font-semibold text-lg text-foreground">Daily Maintenance</h3>
                 <p className="text-sm text-muted-foreground">View and manage daily tasks</p>
+              </div>
+            </Card>
+          </Link>
+          <Link href="/dashboard/maintenance/weekly" className="block">
+            <Card className="hover:bg-accent/50 transition-colors p-6 flex items-center gap-4 shadow-md">
+              <CalendarCheck2 className="h-8 w-8 text-primary" />
+              <div>
+                <h3 className="font-semibold text-lg text-foreground">Weekly Maintenance</h3>
+                <p className="text-sm text-muted-foreground">Manage weekly schedules</p>
+              </div>
+            </Card>
+          </Link>
+          <Link href="/dashboard/maintenance/monthly" className="block">
+            <Card className="hover:bg-accent/50 transition-colors p-6 flex items-center gap-4 shadow-md">
+              <CalendarClock className="h-8 w-8 text-primary" /> {/* Using CalendarClock as it's already imported and relevant */}
+              <div>
+                <h3 className="font-semibold text-lg text-foreground">Monthly Maintenance</h3>
+                <p className="text-sm text-muted-foreground">Oversee monthly checks</p>
+              </div>
+            </Card>
+          </Link>
+          <Link href="/dashboard/inventory" className="block">
+            <Card className="hover:bg-accent/50 transition-colors p-6 flex items-center gap-4 shadow-md">
+              <ClipboardList className="h-8 w-8 text-primary" />
+              <div>
+                <h3 className="font-semibold text-lg text-foreground">Task Inventory</h3>
+                <p className="text-sm text-muted-foreground">View all maintenance tasks</p>
               </div>
             </Card>
           </Link>
