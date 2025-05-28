@@ -20,7 +20,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { LogIn } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useToast } from "@/hooks/use-toast";
-import Image from "next/image";
+// Image component is no longer needed for background
+// import Image from "next/image";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -57,17 +58,8 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-background p-4">
-      <Image
-        src="https://placehold.co/1920x1080.png"
-        alt="Industrial background"
-        layout="fill"
-        objectFit="cover"
-        className="absolute inset-0 z-0"
-        data-ai-hint="industrial factory"
-        priority
-      />
-      <div className="absolute inset-0 z-10 bg-black/50 backdrop-blur-sm"></div> {/* Optional: Overlay for better text readability */}
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-sky-100 p-4">
+      {/* Image background and overlay removed */}
       
       <Card className="w-full max-w-md shadow-xl z-20"> {/* Ensure card is above the background */}
         <CardHeader className="items-center text-center">
