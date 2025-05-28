@@ -7,8 +7,8 @@ import autoTable from 'jspdf-autotable';
 import PageHeader from "@/components/dashboard/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardContent } from "@/components/ui/card"; // Added import
-import { Badge } from "@/components/ui/badge"; // Added import
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Download, ClipboardList } from "lucide-react";
 import type { TaskStatus } from "@/components/maintenance/MaintenanceTaskCard";
 import type { DailyTask } from "../maintenance/daily/page";
@@ -33,68 +33,69 @@ export default function InventoryMaintenancePage() {
   const [combinedTasks, setCombinedTasks] = useState<CombinedTask[]>([]);
   const [hasInitialized, setHasInitialized] = useState(false);
 
+  const loadTasks = () => {
+    let allTasks: CombinedTask[] = [];
+
+    // Load Daily Tasks
+    const dailyTasksString = localStorage.getItem("dailyTasks");
+    if (dailyTasksString) {
+      try {
+        const dailyTasks: DailyTask[] = JSON.parse(dailyTasksString);
+        allTasks = allTasks.concat(dailyTasks.map(task => ({ ...task, type: "Daily" })));
+      } catch (e) {
+        console.error("Failed to parse dailyTasks from localStorage", e);
+      }
+    }
+
+    // Load Weekly Tasks
+    const weeklyTasksString = localStorage.getItem("weeklyTasks");
+    if (weeklyTasksString) {
+      try {
+        const weeklyTasks: WeeklyTask[] = JSON.parse(weeklyTasksString);
+        allTasks = allTasks.concat(weeklyTasks.map(task => ({ ...task, type: "Weekly" })));
+      } catch (e) {
+        console.error("Failed to parse weeklyTasks from localStorage", e);
+      }
+    }
+
+    // Load Monthly Tasks
+    const monthlyTasksString = localStorage.getItem("monthlyTasks");
+    if (monthlyTasksString) {
+      try {
+        const monthlyTasks: MonthlyTask[] = JSON.parse(monthlyTasksString);
+        allTasks = allTasks.concat(monthlyTasks.map(task => ({ ...task, type: "Monthly" })));
+      } catch (e) {
+        console.error("Failed to parse monthlyTasks from localStorage", e);
+      }
+    }
+    
+    // Sort tasks by due date
+    allTasks.sort((a, b) => {
+      const dateA = new Date(a.dueDate);
+      const dateB = new Date(b.dueDate);
+
+      if (!isNaN(dateA.getTime()) && !isNaN(dateB.getTime())) {
+        return dateA.getTime() - dateB.getTime();
+      }
+      // Fallback for non-standard date strings or if parsing fails
+      return a.dueDate.localeCompare(b.dueDate);
+    });
+    setCombinedTasks(allTasks);
+  };
+  
   useEffect(() => {
-    const loadTasks = () => {
-      let allTasks: CombinedTask[] = [];
-
-      // Load Daily Tasks
-      const dailyTasksString = localStorage.getItem("dailyTasks");
-      if (dailyTasksString) {
-        try {
-          const dailyTasks: DailyTask[] = JSON.parse(dailyTasksString);
-          allTasks = allTasks.concat(dailyTasks.map(task => ({ ...task, type: "Daily" })));
-        } catch (e) {
-          console.error("Failed to parse dailyTasks from localStorage", e);
-        }
-      }
-
-      // Load Weekly Tasks
-      const weeklyTasksString = localStorage.getItem("weeklyTasks");
-      if (weeklyTasksString) {
-        try {
-          const weeklyTasks: WeeklyTask[] = JSON.parse(weeklyTasksString);
-          allTasks = allTasks.concat(weeklyTasks.map(task => ({ ...task, type: "Weekly" })));
-        } catch (e) {
-          console.error("Failed to parse weeklyTasks from localStorage", e);
-        }
-      }
-
-      // Load Monthly Tasks
-      const monthlyTasksString = localStorage.getItem("monthlyTasks");
-      if (monthlyTasksString) {
-        try {
-          const monthlyTasks: MonthlyTask[] = JSON.parse(monthlyTasksString);
-          allTasks = allTasks.concat(monthlyTasks.map(task => ({ ...task, type: "Monthly" })));
-        } catch (e) {
-          console.error("Failed to parse monthlyTasks from localStorage", e);
-        }
-      }
-      
-      // Sort tasks by due date (simple string sort, might need improvement for actual date sorting)
-      // For robust date sorting, convert dueDate to Date objects before comparison
-      allTasks.sort((a, b) => {
-        // Try to parse dueDates, fallback to localeCompare if parsing fails or dates are not standard
-        const dateA = new Date(a.dueDate);
-        const dateB = new Date(b.dueDate);
-
-        if (!isNaN(dateA.getTime()) && !isNaN(dateB.getTime())) {
-          return dateA.getTime() - dateB.getTime();
-        }
-        return a.dueDate.localeCompare(b.dueDate);
-      });
-      setCombinedTasks(allTasks);
-    };
-
     loadTasks();
     setHasInitialized(true);
 
-    // Optional: Listen for storage changes to update if tasks are modified elsewhere
+    // Listen for storage changes to update if tasks are modified elsewhere
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === 'dailyTasks' || event.key === 'weeklyTasks' || event.key === 'monthlyTasks') {
         loadTasks();
       }
     };
     window.addEventListener('storage', handleStorageChange);
+    
+    // Cleanup listener on component unmount
     return () => {
         window.removeEventListener('storage', handleStorageChange);
     };
@@ -116,7 +117,6 @@ export default function InventoryMaintenancePage() {
         task.status,
         task.priority || "N/A",
         task.assignedTo || "N/A",
-        // task.description || "N/A" // Description can make rows very tall
       ];
       tableRows.push(taskData);
     });
@@ -165,7 +165,7 @@ export default function InventoryMaintenancePage() {
 
       {hasInitialized && combinedTasks.length > 0 && (
         <Card className="shadow-lg">
-          <CardContent className="p-0"> {/* Remove default padding from CardContent */}
+          <CardContent className="p-0">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -215,9 +215,9 @@ export default function InventoryMaintenancePage() {
                         <Badge 
                           variant={task.priority === 'High' ? 'destructive' : task.priority === 'Medium' ? 'secondary' : 'outline'}
                           className={
-                            task.priority === "High" ? "" : // destructive variant handles colors
+                            task.priority === "High" ? "" : 
                             task.priority === "Medium" ? "bg-yellow-500 border-yellow-500 text-black hover:bg-yellow-600" :
-                            "border-gray-400 text-muted-foreground hover:bg-gray-100" // More theme-friendly for Low
+                            "border-gray-400 text-muted-foreground hover:bg-gray-100"
                           }
                         >
                           {task.priority || "N/A"}
@@ -236,4 +236,3 @@ export default function InventoryMaintenancePage() {
     </>
   );
 }
-
