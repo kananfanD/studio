@@ -28,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Save } from "lucide-react";
 import type { WeeklyTask } from "./../page"; 
 import type { TaskStatus } from "@/components/maintenance/MaintenanceTaskCard";
+import type { CombinedTask, MaintenanceTaskType } from "@/app/dashboard/inventory/page";
 
 const taskFormSchema = z.object({
   id: z.string().optional(),
@@ -108,9 +109,10 @@ export default function NewWeeklyTaskPage() {
   function onSubmit(data: TaskFormValues) {
     const storedTasksString = localStorage.getItem("weeklyTasks");
     let tasks: WeeklyTask[] = storedTasksString ? JSON.parse(storedTasksString) : [];
+    const taskUniqueId = (isEditMode && taskIdToEdit) ? taskIdToEdit : `wt${Date.now()}`;
 
     if (isEditMode && taskIdToEdit) {
-      tasks = tasks.map(task => task.id === taskIdToEdit ? { ...task, ...data, id: taskIdToEdit } : task);
+      tasks = tasks.map(task => task.id === taskIdToEdit ? { ...data, id: taskUniqueId, priority: data.priority || "Medium", status: data.status || "Pending" } : task);
       toast({
         title: "Weekly Task Updated",
         description: `${data.taskName} has been updated successfully.`,
@@ -118,7 +120,7 @@ export default function NewWeeklyTaskPage() {
     } else {
       const newTask: WeeklyTask = {
         ...data,
-        id: `wt${Date.now()}`,
+        id: taskUniqueId,
         priority: data.priority || "Medium",
         status: data.status || "Pending",
       };
@@ -129,6 +131,38 @@ export default function NewWeeklyTaskPage() {
       });
     }
     localStorage.setItem("weeklyTasks", JSON.stringify(tasks));
+    window.dispatchEvent(new StorageEvent('storage', { key: 'weeklyTasks', newValue: JSON.stringify(tasks), storageArea: localStorage }));
+
+    // Update allMaintenanceTasksLog
+    const storedAllTasksLogString = localStorage.getItem("allMaintenanceTasksLog");
+    let allTasksLog: CombinedTask[] = storedAllTasksLogString ? JSON.parse(storedAllTasksLogString) : [];
+    
+    const taskForLog: CombinedTask = {
+        id: taskUniqueId,
+        taskName: data.taskName,
+        machineId: data.machineId,
+        dueDate: data.dueDate,
+        status: data.status || "Pending",
+        type: "Weekly" as MaintenanceTaskType,
+        assignedTo: data.assignedTo,
+        priority: data.priority || "Medium",
+        description: data.description,
+        imageUrl: data.imageUrl,
+    };
+
+    if (isEditMode && taskIdToEdit) {
+        const taskIndexInLog = allTasksLog.findIndex(task => task.id === taskIdToEdit);
+        if (taskIndexInLog !== -1) {
+            allTasksLog[taskIndexInLog] = taskForLog;
+        } else {
+            allTasksLog.push(taskForLog);
+        }
+    } else {
+        allTasksLog.push(taskForLog);
+    }
+    localStorage.setItem("allMaintenanceTasksLog", JSON.stringify(allTasksLog));
+    window.dispatchEvent(new StorageEvent('storage', { key: 'allMaintenanceTasksLog', newValue: JSON.stringify(allTasksLog), storageArea: localStorage }));
+
     router.push("/dashboard/maintenance/weekly");
   }
 
@@ -319,3 +353,5 @@ export default function NewWeeklyTaskPage() {
     </>
   );
 }
+
+    

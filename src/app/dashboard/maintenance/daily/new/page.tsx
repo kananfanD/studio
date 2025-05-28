@@ -26,11 +26,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Save } from "lucide-react";
-import type { DailyTask } from "./../page"; // Import the Task type
+import type { DailyTask } from "./../page"; 
 import type { TaskStatus } from "@/components/maintenance/MaintenanceTaskCard";
+import type { CombinedTask, MaintenanceTaskType } from "@/app/dashboard/inventory/page";
 
 const taskFormSchema = z.object({
-  id: z.string().optional(), // For editing
+  id: z.string().optional(), 
   taskName: z.string().min(3, { message: "Task name must be at least 3 characters." }),
   machineId: z.string().min(1, { message: "Machine ID is required." }),
   dueDate: z.string().min(1, {message: "Due date is required."}),
@@ -55,7 +56,7 @@ export default function NewDailyTaskPage() {
     defaultValues: {
       taskName: "",
       machineId: "",
-      dueDate: new Date().toISOString().split('T')[0], // Default to today
+      dueDate: new Date().toISOString().split('T')[0], 
       assignedTo: "",
       priority: "Medium",
       description: "",
@@ -74,9 +75,6 @@ export default function NewDailyTaskPage() {
         form.setValue("imageUrl", reader.result as string, { shouldValidate: true });
       };
       reader.readAsDataURL(file);
-    } else {
-      // If user cancels file selection, clear the image URL or handle as needed
-      // form.setValue("imageUrl", ""); // Optional: clear if no file selected
     }
   };
 
@@ -111,9 +109,10 @@ export default function NewDailyTaskPage() {
   function onSubmit(data: TaskFormValues) {
     const storedTasksString = localStorage.getItem("dailyTasks");
     let tasks: DailyTask[] = storedTasksString ? JSON.parse(storedTasksString) : [];
+    const taskUniqueId = (isEditMode && taskIdToEdit) ? taskIdToEdit : `dt${Date.now()}`;
 
     if (isEditMode && taskIdToEdit) {
-      tasks = tasks.map(task => task.id === taskIdToEdit ? { ...task, ...data, id: taskIdToEdit } : task);
+      tasks = tasks.map(task => task.id === taskIdToEdit ? { ...data, id: taskUniqueId, priority: data.priority || "Medium", status: data.status || "Pending" } : task);
       toast({
         title: "Daily Task Updated",
         description: `${data.taskName} has been updated successfully.`,
@@ -121,7 +120,7 @@ export default function NewDailyTaskPage() {
     } else {
       const newTask: DailyTask = {
         ...data,
-        id: `dt${Date.now()}`, // Generate a unique ID
+        id: taskUniqueId, 
         priority: data.priority || "Medium",
         status: data.status || "Pending",
       };
@@ -132,6 +131,39 @@ export default function NewDailyTaskPage() {
       });
     }
     localStorage.setItem("dailyTasks", JSON.stringify(tasks));
+    window.dispatchEvent(new StorageEvent('storage', { key: 'dailyTasks', newValue: JSON.stringify(tasks), storageArea: localStorage }));
+
+
+    // Update allMaintenanceTasksLog
+    const storedAllTasksLogString = localStorage.getItem("allMaintenanceTasksLog");
+    let allTasksLog: CombinedTask[] = storedAllTasksLogString ? JSON.parse(storedAllTasksLogString) : [];
+    
+    const taskForLog: CombinedTask = {
+        id: taskUniqueId,
+        taskName: data.taskName,
+        machineId: data.machineId,
+        dueDate: data.dueDate,
+        status: data.status || "Pending",
+        type: "Daily" as MaintenanceTaskType,
+        assignedTo: data.assignedTo,
+        priority: data.priority || "Medium",
+        description: data.description,
+        imageUrl: data.imageUrl,
+    };
+
+    if (isEditMode && taskIdToEdit) {
+        const taskIndexInLog = allTasksLog.findIndex(task => task.id === taskIdToEdit);
+        if (taskIndexInLog !== -1) {
+            allTasksLog[taskIndexInLog] = taskForLog;
+        } else {
+            allTasksLog.push(taskForLog); // Add if not found (should ideally be there)
+        }
+    } else {
+        allTasksLog.push(taskForLog);
+    }
+    localStorage.setItem("allMaintenanceTasksLog", JSON.stringify(allTasksLog));
+    window.dispatchEvent(new StorageEvent('storage', { key: 'allMaintenanceTasksLog', newValue: JSON.stringify(allTasksLog), storageArea: localStorage }));
+
     router.push("/dashboard/maintenance/daily");
   }
 
@@ -285,7 +317,6 @@ export default function NewDailyTaskPage() {
                         type="file" 
                         accept="image/*" 
                         onChange={handleImageUpload}
-                        // value is not set directly for file inputs
                       />
                     </FormControl>
                     <FormDescription>Upload an image for the task. If an image was previously set via URL, uploading a new one will replace it.</FormDescription>
@@ -323,3 +354,5 @@ export default function NewDailyTaskPage() {
     </>
   );
 }
+
+    

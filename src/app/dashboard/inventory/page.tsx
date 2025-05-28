@@ -11,13 +11,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Download, ClipboardList } from "lucide-react";
 import type { TaskStatus } from "@/components/maintenance/MaintenanceTaskCard";
-import type { DailyTask } from "../maintenance/daily/page";
-import type { WeeklyTask } from "../maintenance/weekly/page";
-import type { MonthlyTask } from "../maintenance/monthly/page";
+// Remove direct imports of DailyTask, WeeklyTask, MonthlyTask as we'll use CombinedTask structure
+// import type { DailyTask } from "../maintenance/daily/page";
+// import type { WeeklyTask } from "../maintenance/weekly/page";
+// import type { MonthlyTask } from "../maintenance/monthly/page";
 
-type MaintenanceTaskType = "Daily" | "Weekly" | "Monthly";
+export type MaintenanceTaskType = "Daily" | "Weekly" | "Monthly";
 
-interface CombinedTask {
+export interface CombinedTask {
   id: string;
   taskName: string;
   machineId: string;
@@ -27,6 +28,7 @@ interface CombinedTask {
   assignedTo?: string;
   priority?: "Low" | "Medium" | "High";
   description?: string;
+  imageUrl?: string; // Added imageUrl
 }
 
 export default function InventoryMaintenancePage() {
@@ -34,68 +36,47 @@ export default function InventoryMaintenancePage() {
   const [hasInitialized, setHasInitialized] = useState(false);
 
   const loadTasks = () => {
-    let allTasks: CombinedTask[] = [];
+    const allTasksLogString = localStorage.getItem("allMaintenanceTasksLog");
+    let tasksFromLog: CombinedTask[] = [];
 
-    // Load Daily Tasks
-    const dailyTasksString = localStorage.getItem("dailyTasks");
-    if (dailyTasksString) {
+    if (allTasksLogString) {
       try {
-        const dailyTasks: DailyTask[] = JSON.parse(dailyTasksString);
-        allTasks = allTasks.concat(dailyTasks.map(task => ({ ...task, type: "Daily" })));
+        tasksFromLog = JSON.parse(allTasksLogString);
       } catch (e) {
-        console.error("Failed to parse dailyTasks from localStorage", e);
-      }
-    }
-
-    // Load Weekly Tasks
-    const weeklyTasksString = localStorage.getItem("weeklyTasks");
-    if (weeklyTasksString) {
-      try {
-        const weeklyTasks: WeeklyTask[] = JSON.parse(weeklyTasksString);
-        allTasks = allTasks.concat(weeklyTasks.map(task => ({ ...task, type: "Weekly" })));
-      } catch (e) {
-        console.error("Failed to parse weeklyTasks from localStorage", e);
-      }
-    }
-
-    // Load Monthly Tasks
-    const monthlyTasksString = localStorage.getItem("monthlyTasks");
-    if (monthlyTasksString) {
-      try {
-        const monthlyTasks: MonthlyTask[] = JSON.parse(monthlyTasksString);
-        allTasks = allTasks.concat(monthlyTasks.map(task => ({ ...task, type: "Monthly" })));
-      } catch (e) {
-        console.error("Failed to parse monthlyTasks from localStorage", e);
+        console.error("Failed to parse allMaintenanceTasksLog from localStorage", e);
+        // Optionally, clear the corrupted item or handle error
+        // localStorage.removeItem("allMaintenanceTasksLog"); 
       }
     }
     
-    // Sort tasks by due date
-    allTasks.sort((a, b) => {
+    // Sort tasks by due date (optional, but good to keep)
+    tasksFromLog.sort((a, b) => {
       const dateA = new Date(a.dueDate);
       const dateB = new Date(b.dueDate);
 
+      // Handle cases where dueDate might not be a valid date string
       if (!isNaN(dateA.getTime()) && !isNaN(dateB.getTime())) {
         return dateA.getTime() - dateB.getTime();
       }
       // Fallback for non-standard date strings or if parsing fails
+      // Consider a more robust date parsing/comparison if various formats are expected
       return a.dueDate.localeCompare(b.dueDate);
     });
-    setCombinedTasks(allTasks);
+    setCombinedTasks(tasksFromLog);
   };
   
   useEffect(() => {
     loadTasks();
     setHasInitialized(true);
 
-    // Listen for storage changes to update if tasks are modified elsewhere
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'dailyTasks' || event.key === 'weeklyTasks' || event.key === 'monthlyTasks') {
+      // Reload if the log itself changes, or if D/W/M tasks change (as they update the log)
+      if (event.key === 'allMaintenanceTasksLog' || event.key === 'dailyTasks' || event.key === 'weeklyTasks' || event.key === 'monthlyTasks') {
         loadTasks();
       }
     };
     window.addEventListener('storage', handleStorageChange);
     
-    // Cleanup listener on component unmount
     return () => {
         window.removeEventListener('storage', handleStorageChange);
     };
@@ -126,28 +107,28 @@ export default function InventoryMaintenancePage() {
       body: tableRows,
       startY: 20,
       theme: 'grid',
-      headStyles: { fillColor: [22, 160, 133] }, // Teal color for header
+      headStyles: { fillColor: [22, 160, 133] }, 
       styles: { fontSize: 8 },
       columnStyles: {
-        0: { cellWidth: 40 }, // Task Name
-        1: { cellWidth: 25 }, // Machine ID
-        2: { cellWidth: 18 }, // Type
-        3: { cellWidth: 20 }, // Due Date
-        4: { cellWidth: 20 }, // Status
-        5: { cellWidth: 18 }, // Priority
-        6: { cellWidth: 25 }, // Assigned To
+        0: { cellWidth: 40 }, 
+        1: { cellWidth: 25 }, 
+        2: { cellWidth: 18 }, 
+        3: { cellWidth: 20 }, 
+        4: { cellWidth: 20 }, 
+        5: { cellWidth: 18 }, 
+        6: { cellWidth: 25 }, 
       }
     });
     
-    doc.text("Maintenance Task Inventory", 14, 15);
-    doc.save("maintenance_inventory.pdf");
+    doc.text("Maintenance Task Log", 14, 15); // Changed title to reflect new purpose
+    doc.save("maintenance_task_log.pdf");
   };
 
   return (
     <>
       <PageHeader
-        title="Maintenance Task Inventory"
-        description="A consolidated view of all daily, weekly, and monthly maintenance tasks."
+        title="Maintenance Task Log" // Changed title
+        description="A historical log of all daily, weekly, and monthly maintenance tasks." // Changed description
       >
         <Button onClick={handleDownloadPdf} disabled={combinedTasks.length === 0}>
           <Download className="mr-2 h-4 w-4" />
@@ -158,7 +139,7 @@ export default function InventoryMaintenancePage() {
       {hasInitialized && combinedTasks.length === 0 && (
         <div className="col-span-full text-center py-10 text-muted-foreground">
           <ClipboardList className="mx-auto h-12 w-12" />
-          <p className="mt-2">No maintenance tasks found in any category.</p>
+          <p className="mt-2">No maintenance tasks found in the log.</p>
           <p className="text-sm">Add tasks in Daily, Weekly, or Monthly sections to see them here.</p>
         </div>
       )}
@@ -236,3 +217,5 @@ export default function InventoryMaintenancePage() {
     </>
   );
 }
+
+    
