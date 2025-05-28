@@ -60,11 +60,11 @@ export default function LoginForm() {
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <Image
         src="https://placehold.co/1920x1080.png"
-        alt="Industrial machinery background"
+        alt="Industrial background"
         layout="fill"
         objectFit="cover"
         className="absolute inset-0 z-0"
-        data-ai-hint="industrial machinery"
+        data-ai-hint="industrial factory"
         priority
       />
       <div className="absolute inset-0 z-10 bg-black/50 backdrop-blur-sm"></div> {/* Optional: Overlay for better text readability */}
