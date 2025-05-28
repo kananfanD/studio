@@ -13,7 +13,7 @@ import {
   Settings2,
   ClipboardList,
   Wrench,
-  CalendarDays, // Added CalendarDays icon
+  // CalendarDays, // Removed CalendarDays icon
 } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { Button } from '@/components/ui/button';
@@ -34,7 +34,7 @@ import { useState, useEffect } from 'react';
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/maintenance', label: 'Maintenance Tasks', icon: Wrench },
-  { href: '/dashboard/schedule', label: 'Schedule Maintenance', icon: CalendarDays }, // Added Schedule Maintenance
+  // { href: '/dashboard/schedule', label: 'Schedule Maintenance', icon: CalendarDays }, // Removed Schedule Maintenance
   { href: '/dashboard/inventory', label: 'Maintenance Log', icon: ClipboardList },
   { href: '/dashboard/stock', label: 'Component Stock', icon: Archive },
   { href: '/dashboard/manuals', label: 'Manuals', icon: BookOpenText },
