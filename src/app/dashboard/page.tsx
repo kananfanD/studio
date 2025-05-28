@@ -1,4 +1,7 @@
 
+"use client";
+
+import { useState, useEffect } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
 import StatCard from "@/components/dashboard/StatCard";
 import { Button } from "@/components/ui/button";
@@ -12,12 +15,85 @@ import {
   ListChecks, 
   CheckCircle2, 
   BookOpenText,
-  CalendarCheck2, // Added for Weekly Maintenance
-  ClipboardList   // Added for Inventory Maintenance
+  CalendarCheck2,
+  ClipboardList
 } from "lucide-react";
 import Link from "next/link";
+import type { DailyTask } from "./maintenance/daily/page";
+import type { WeeklyTask } from "./maintenance/weekly/page";
+import type { MonthlyTask } from "./maintenance/monthly/page";
+import type { StockItem } from "./stock/page";
+import type { TaskStatus } from "@/components/maintenance/MaintenanceTaskCard";
+
 
 export default function DashboardPage() {
+  const [pendingDailyTasks, setPendingDailyTasks] = useState<number>(0);
+  const [lowStockComponents, setLowStockComponents] = useState<number>(0);
+  const [completedWeeklyTasks, setCompletedWeeklyTasks] = useState<number>(0);
+  const [machinesOperational, setMachinesOperational] = useState<string>("0%");
+
+  useEffect(() => {
+    // Load Daily Tasks for Pending count
+    const dailyTasksString = localStorage.getItem("dailyTasks");
+    if (dailyTasksString) {
+      try {
+        const dailyTasks: DailyTask[] = JSON.parse(dailyTasksString);
+        const pending = dailyTasks.filter(task => task.status === "Pending" || task.status === "In Progress" || task.status === "Overdue").length;
+        setPendingDailyTasks(pending);
+      } catch (e) {
+        console.error("Failed to parse dailyTasks for dashboard stats", e);
+      }
+    }
+
+    // Load Stock Items for Low Stock count
+    const stockItemsString = localStorage.getItem("stockItems");
+    if (stockItemsString) {
+      try {
+        const stockItems: StockItem[] = JSON.parse(stockItemsString);
+        const lowStock = stockItems.filter(item => item.minStockLevel !== undefined && item.quantity < item.minStockLevel).length;
+        setLowStockComponents(lowStock);
+      } catch (e) {
+        console.error("Failed to parse stockItems for dashboard stats", e);
+      }
+    }
+
+    // Load Weekly Tasks for Completed count
+    const weeklyTasksString = localStorage.getItem("weeklyTasks");
+    if (weeklyTasksString) {
+      try {
+        const weeklyTasks: WeeklyTask[] = JSON.parse(weeklyTasksString);
+        const completed = weeklyTasks.filter(task => task.status === "Completed").length;
+        setCompletedWeeklyTasks(completed);
+      } catch (e) {
+        console.error("Failed to parse weeklyTasks for dashboard stats", e);
+      }
+    }
+
+    // Calculate Machines Operational
+    let allTasks: { status: TaskStatus }[] = [];
+    const taskKeys = ["dailyTasks", "weeklyTasks", "monthlyTasks"];
+    taskKeys.forEach(key => {
+      const tasksString = localStorage.getItem(key);
+      if (tasksString) {
+        try {
+          const tasks = JSON.parse(tasksString);
+          allTasks = allTasks.concat(tasks.map((task: any) => ({ status: task.status })));
+        } catch (e) {
+          console.error(`Failed to parse ${key} for operational stats`, e);
+        }
+      }
+    });
+
+    if (allTasks.length > 0) {
+      const overdueTasks = allTasks.filter(task => task.status === "Overdue").length;
+      const operationalPercentage = Math.round(((allTasks.length - overdueTasks) / allTasks.length) * 100);
+      setMachinesOperational(`${operationalPercentage}%`);
+    } else {
+      setMachinesOperational("100%"); // No tasks, so assume 100% operational
+    }
+
+  }, []);
+
   return (
     <>
       <PageHeader 
@@ -34,15 +110,15 @@ export default function DashboardPage() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <StatCard
           title="Pending Daily Tasks"
-          value="5"
+          value={pendingDailyTasks}
           icon={CalendarClock}
-          description="+2 since yesterday"
+          description="Tasks needing attention"
           className="bg-card border-primary/20"
           iconClassName="text-primary"
         />
         <StatCard
           title="Components Low Stock"
-          value="3"
+          value={lowStockComponents}
           icon={AlertTriangle}
           description="Order new parts soon"
           className="bg-card border-destructive/30"
@@ -50,7 +126,7 @@ export default function DashboardPage() {
         />
         <StatCard
           title="Completed This Week"
-          value="12"
+          value={completedWeeklyTasks}
           icon={ListChecks}
           description="Weekly maintenance tasks"
           className="bg-card border-green-500/30"
@@ -58,7 +134,7 @@ export default function DashboardPage() {
         />
         <StatCard
           title="Machines Operational"
-          value="98%"
+          value={machinesOperational}
           icon={CheckCircle2}
           description="Overall equipment effectiveness"
           className="bg-card border-blue-500/30"
