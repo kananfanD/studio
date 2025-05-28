@@ -13,7 +13,7 @@ import {
   Settings2,
   ClipboardList,
   Wrench,
-  CalendarRange, // Added CalendarRange icon
+  // CalendarRange, // Removed CalendarRange icon
 } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { Button } from '@/components/ui/button';
@@ -34,7 +34,7 @@ import { useState, useEffect } from 'react';
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/maintenance', label: 'Maintenance Tasks', icon: Wrench },
-  { href: '/dashboard/schedule', label: 'Jadwal Perawatan', icon: CalendarRange }, // New Schedule Menu
+  // { href: '/dashboard/schedule', label: 'Jadwal Perawatan', icon: CalendarRange }, // Removed Schedule Menu
   { href: '/dashboard/inventory', label: 'Maintenance Log', icon: ClipboardList },
   { href: '/dashboard/stock', label: 'Component Stock', icon: Archive },
   { href: '/dashboard/manuals', label: 'Manuals', icon: BookOpenText },
