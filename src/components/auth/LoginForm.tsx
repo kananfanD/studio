@@ -20,8 +20,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { LogIn } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useToast } from "@/hooks/use-toast";
-// Image component is no longer needed for background
-// import Image from "next/image";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -41,27 +39,23 @@ export default function LoginForm() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    // Simulate API call
     console.log("Login submitted:", values);
     
-    // In a real app, you'd call an auth API here.
-    // For scaffolding, we set a flag in localStorage and navigate.
     if (typeof window !== 'undefined') {
       localStorage.setItem('equipCareUserLoggedIn', 'true');
+      // Do not set role here, redirect to role selection
     }
 
     toast({
       title: "Login Successful",
-      description: "Redirecting to dashboard...",
+      description: "Please select your role.",
     });
-    router.push("/dashboard");
+    router.push("/role-selection"); // Redirect to role selection page
   }
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-sky-100 p-4">
-      {/* Image background and overlay removed */}
-      
-      <Card className="w-full max-w-md shadow-xl z-20"> {/* Ensure card is above the background */}
+      <Card className="w-full max-w-md shadow-xl z-20">
         <CardHeader className="items-center text-center">
           <Logo className="mb-4" iconSize={10} textSize="text-3xl" />
           <CardTitle className="text-2xl font-bold">Welcome Back!</CardTitle>

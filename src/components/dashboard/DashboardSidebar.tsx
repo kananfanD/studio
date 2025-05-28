@@ -13,7 +13,7 @@ import {
   Settings2,
   ClipboardList,
   Wrench,
-  // CalendarDays, // Removed CalendarDays icon
+  CalendarDays,
 } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { Button } from '@/components/ui/button';
@@ -31,18 +31,20 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from 'react';
 
-const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/dashboard/maintenance', label: 'Maintenance Tasks', icon: Wrench },
-  // { href: '/dashboard/schedule', label: 'Schedule Maintenance', icon: CalendarDays }, // Removed Schedule Maintenance
-  { href: '/dashboard/inventory', label: 'Maintenance Log', icon: ClipboardList },
-  { href: '/dashboard/stock', label: 'Component Stock', icon: Archive },
-  { href: '/dashboard/manuals', label: 'Manuals', icon: BookOpenText },
+type UserRole = "operator" | "maintenance" | "warehouse" | null;
+
+const allNavItems = [
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['operator', 'maintenance', 'warehouse'] },
+  { href: '/dashboard/maintenance', label: 'Maintenance Tasks', icon: Wrench, roles: ['operator', 'maintenance'] },
+  { href: '/dashboard/inventory', label: 'Maintenance Log', icon: ClipboardList, roles: ['maintenance'] },
+  { href: '/dashboard/stock', label: 'Component Stock', icon: Archive, roles: ['warehouse', 'maintenance'] },
+  { href: '/dashboard/manuals', label: 'Manuals', icon: BookOpenText, roles: ['operator', 'maintenance'] },
 ];
 
 interface DashboardSidebarProps {
   isOpen: boolean;
   onToggle: () => void;
+  userRole: UserRole;
 }
 
 interface UserProfile {
@@ -53,7 +55,7 @@ interface UserProfile {
 const DEFAULT_AVATAR_PLACEHOLDER = "https://placehold.co/40x40.png";
 const DEFAULT_USER_NAME = "User Name";
 
-export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarProps) {
+export default function DashboardSidebar({ isOpen, onToggle, userRole }: DashboardSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
@@ -84,7 +86,7 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
     loadProfile(); 
 
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'userProfile') {
+      if (event.key === 'userProfile' || event.key === 'userRole') { // Listen for role changes too
         loadProfile();
       }
     };
@@ -100,8 +102,7 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem("equipCareUserLoggedIn");
-      // Optionally clear userProfile from localStorage on logout
-      // localStorage.removeItem("userProfile"); 
+      localStorage.removeItem("userRole"); 
     }
     toast({
       title: "Logged Out",
@@ -109,6 +110,13 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
     });
     router.push('/'); 
   };
+
+  const getVisibleNavItems = () => {
+    if (!userRole) return [];
+    return allNavItems.filter(item => item.roles.includes(userRole));
+  };
+
+  const visibleNavItems = getVisibleNavItems();
 
   return (
     <aside className={cn(
@@ -130,7 +138,7 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
         <Logo iconSize={6} textSize="text-xl" hideText={!isOpen} className="ml-0" />
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-2">
-        {navItems.map((item) => (
+        {visibleNavItems.map((item) => (
           <Link key={item.label} href={item.href} passHref>
             <Button
               variant={pathname.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard') ? 'secondary' : 'ghost'}
