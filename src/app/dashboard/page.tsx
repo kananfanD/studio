@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
 import StatCard from "@/components/dashboard/StatCard";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ui/card"; // Ensure Card is imported
 import { 
   CalendarClock, 
   AlertTriangle, 
@@ -15,13 +15,12 @@ import {
   ListChecks, 
   CheckCircle2, 
   BookOpenText,
-  CalendarCheck2,
   ClipboardList
 } from "lucide-react";
 import Link from "next/link";
-import type { DailyTask } from "./maintenance/daily/page";
-import type { WeeklyTask } from "./maintenance/weekly/page";
-import type { MonthlyTask } from "./maintenance/monthly/page";
+import type { DailyTask } from "./maintenance/daily/page"; // Path might need adjustment if page is moved/refactored
+import type { WeeklyTask } from "./maintenance/weekly/page"; // Path might need adjustment
+import type { MonthlyTask } from "./maintenance/monthly/page"; // Path might need adjustment
 import type { StockItem } from "./stock/page";
 import type { TaskStatus } from "@/components/maintenance/MaintenanceTaskCard";
 
@@ -101,7 +100,8 @@ export default function DashboardPage() {
         description="Welcome to EquipCare Hub. Here's a summary of your maintenance activities."
       >
         <Button asChild>
-          <Link href="/dashboard/maintenance/daily/new"> {/* Example link */}
+          {/* Link to the new consolidated maintenance page, potentially to add a daily task by default */}
+          <Link href="/dashboard/maintenance/daily/new"> 
             <PlusCircle className="mr-2 h-4 w-4" /> New Task
           </Link>
         </Button>
@@ -145,30 +145,12 @@ export default function DashboardPage() {
       <section className="mt-10">
         <h2 className="mb-4 text-2xl font-semibold text-foreground">Quick Actions</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Link href="/dashboard/maintenance/daily" className="block">
+          <Link href="/dashboard/maintenance" className="block">
             <Card className="hover:bg-accent/50 transition-colors p-6 flex items-center gap-4 shadow-md">
               <Wrench className="h-8 w-8 text-primary" />
               <div>
-                <h3 className="font-semibold text-lg text-foreground">Daily Maintenance</h3>
-                <p className="text-sm text-muted-foreground">View and manage daily tasks</p>
-              </div>
-            </Card>
-          </Link>
-          <Link href="/dashboard/maintenance/weekly" className="block">
-            <Card className="hover:bg-accent/50 transition-colors p-6 flex items-center gap-4 shadow-md">
-              <CalendarCheck2 className="h-8 w-8 text-primary" />
-              <div>
-                <h3 className="font-semibold text-lg text-foreground">Weekly Maintenance</h3>
-                <p className="text-sm text-muted-foreground">Manage weekly schedules</p>
-              </div>
-            </Card>
-          </Link>
-          <Link href="/dashboard/maintenance/monthly" className="block">
-            <Card className="hover:bg-accent/50 transition-colors p-6 flex items-center gap-4 shadow-md">
-              <CalendarClock className="h-8 w-8 text-primary" /> {/* Using CalendarClock as it's already imported and relevant */}
-              <div>
-                <h3 className="font-semibold text-lg text-foreground">Monthly Maintenance</h3>
-                <p className="text-sm text-muted-foreground">Oversee monthly checks</p>
+                <h3 className="font-semibold text-lg text-foreground">Maintenance Tasks</h3>
+                <p className="text-sm text-muted-foreground">View and manage all tasks</p>
               </div>
             </Card>
           </Link>
@@ -176,8 +158,8 @@ export default function DashboardPage() {
             <Card className="hover:bg-accent/50 transition-colors p-6 flex items-center gap-4 shadow-md">
               <ClipboardList className="h-8 w-8 text-primary" />
               <div>
-                <h3 className="font-semibold text-lg text-foreground">Task Inventory</h3>
-                <p className="text-sm text-muted-foreground">View all maintenance tasks</p>
+                <h3 className="font-semibold text-lg text-foreground">Maintenance Log</h3>
+                <p className="text-sm text-muted-foreground">View historical task log</p>
               </div>
             </Card>
           </Link>

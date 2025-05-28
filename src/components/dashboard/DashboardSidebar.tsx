@@ -15,6 +15,7 @@ import {
   ChevronDown,
   Settings2,
   ClipboardList,
+  Wrench, // Added Wrench icon
 } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { Button } from '@/components/ui/button';
@@ -34,10 +35,8 @@ import { useState, useEffect } from 'react';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/dashboard/maintenance/daily', label: 'Daily Maintenance', icon: CalendarDays },
-  { href: '/dashboard/maintenance/weekly', label: 'Weekly Maintenance', icon: CalendarCheck2 },
-  { href: '/dashboard/maintenance/monthly', label: 'Monthly Maintenance', icon: CalendarClock },
-  { href: '/dashboard/inventory', label: 'Inventory Maintenance', icon: ClipboardList },
+  { href: '/dashboard/maintenance', label: 'Maintenance Tasks', icon: Wrench }, // Consolidated menu
+  { href: '/dashboard/inventory', label: 'Maintenance Log', icon: ClipboardList }, // Renamed for clarity
   { href: '/dashboard/stock', label: 'Component Stock', icon: Archive },
   { href: '/dashboard/manuals', label: 'Manuals', icon: BookOpenText },
 ];
@@ -135,10 +134,10 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
         {navItems.map((item) => (
           <Link key={item.label} href={item.href} passHref>
             <Button
-              variant={pathname === item.href ? 'secondary' : 'ghost'}
+              variant={pathname.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard') ? 'secondary' : 'ghost'}
               className={cn(
                 "w-full justify-start",
-                pathname === item.href
+                pathname.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard')
                 ? "bg-sidebar-accent text-sidebar-accent-foreground"
                 : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                 !isOpen && "justify-center h-12 w-12 p-0" 
@@ -164,7 +163,7 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
               title="My Account"
             >
               <Avatar className={cn("mr-3 h-8 w-8", !isOpen && "mr-0")}>
-                <AvatarImage src={userAvatarUrl} alt={userName} data-ai-hint="user profile" />
+                <AvatarImage src={userAvatarUrl} alt={userName} data-ai-hint="user profile"/>
                 <AvatarFallback>{userName ? userName.charAt(0).toUpperCase() : "U"}</AvatarFallback>
               </Avatar>
               {isOpen && <span className="flex-1 text-left truncate">{userName}</span>}
