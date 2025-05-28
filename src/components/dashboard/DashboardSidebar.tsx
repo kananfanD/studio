@@ -5,9 +5,6 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
-  CalendarDays,
-  CalendarCheck2,
-  CalendarClock,
   Archive,
   BookOpenText,
   LogOut,
@@ -15,7 +12,8 @@ import {
   ChevronDown,
   Settings2,
   ClipboardList,
-  Wrench, // Added Wrench icon
+  Wrench,
+  CalendarRange, // Added CalendarRange icon
 } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { Button } from '@/components/ui/button';
@@ -35,8 +33,9 @@ import { useState, useEffect } from 'react';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/dashboard/maintenance', label: 'Maintenance Tasks', icon: Wrench }, // Consolidated menu
-  { href: '/dashboard/inventory', label: 'Maintenance Log', icon: ClipboardList }, // Renamed for clarity
+  { href: '/dashboard/maintenance', label: 'Maintenance Tasks', icon: Wrench },
+  { href: '/dashboard/schedule', label: 'Jadwal Perawatan', icon: CalendarRange }, // New Schedule Menu
+  { href: '/dashboard/inventory', label: 'Maintenance Log', icon: ClipboardList },
   { href: '/dashboard/stock', label: 'Component Stock', icon: Archive },
   { href: '/dashboard/manuals', label: 'Manuals', icon: BookOpenText },
 ];
