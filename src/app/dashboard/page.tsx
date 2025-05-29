@@ -16,16 +16,17 @@ import {
   CheckCircle2, 
   BookOpenText,
   ClipboardList,
-  // Sunrise, // No longer needed for quick action
-  // CalendarDays, // No longer needed for quick action
-  // CalendarRange // No longer needed for quick action
+  Sunrise,
+  CalendarDays,
+  CalendarRange,
 } from "lucide-react";
 import Link from "next/link";
-import type { DailyTask } from "./maintenance/page"; // Updated import path
-import type { WeeklyTask } from "./maintenance/page"; // Updated import path
-import type { MonthlyTask } from "./maintenance/page"; // Updated import path
+import type { DailyTask } from "./maintenance/page"; 
+import type { WeeklyTask } from "./maintenance/page"; 
+import type { MonthlyTask } from "./maintenance/page"; 
 import type { StockItem } from "./stock/page";
 import type { TaskStatus } from "@/components/maintenance/MaintenanceTaskCard";
+import { translations, type SupportedLanguage, languageMap } from "./settings/page";
 
 
 export default function DashboardPage() {
@@ -34,6 +35,34 @@ export default function DashboardPage() {
   const [completedWeeklyTasks, setCompletedWeeklyTasks] = useState<number>(0);
   const [machinesOperational, setMachinesOperational] = useState<string>("0%");
   const [userName, setUserName] = useState("User");
+
+  const [currentTranslations, setCurrentTranslations] = useState(translations.en);
+  const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>("en");
+
+  useEffect(() => {
+    const loadLanguage = () => {
+      const savedLanguage = localStorage.getItem("userLanguage") as SupportedLanguage | null;
+      if (savedLanguage && languageMap[savedLanguage]) {
+        setSelectedLanguage(savedLanguage);
+        setCurrentTranslations(translations[savedLanguage] || translations.en);
+      } else {
+        setSelectedLanguage("en");
+        setCurrentTranslations(translations.en);
+      }
+    };
+    loadLanguage();
+
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'userLanguage') {
+        loadLanguage();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -105,63 +134,67 @@ export default function DashboardPage() {
 
   }, []);
 
+  const pageTitle = currentTranslations.pageTitleDashboard?.replace('{userName}', userName) || `Welcome, ${userName}!`;
+  const pageDescription = currentTranslations.pageDescriptionDashboard || "Here's a summary of your maintenance activities.";
+
+
   return (
     <>
       <PageHeader 
-        title={`Welcome, ${userName}!`}
-        description="Here's a summary of your maintenance activities."
+        title={pageTitle}
+        description={pageDescription}
       >
         <Button asChild>
           <Link href="/dashboard/maintenance/daily/new"> 
-            <PlusCircle className="mr-2 h-4 w-4" /> New Daily Task
+            <Sunrise className="mr-2 h-4 w-4" /> {currentTranslations.sidebarMaintenanceTasks?.split(' ')[0] || "New Daily Task"}
           </Link>
         </Button>
       </PageHeader>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <StatCard
-          title="Pending Daily Tasks"
+          title={currentTranslations.pendingDailyTasks || "Pending Daily Tasks"}
           value={pendingDailyTasks}
           icon={CalendarClock}
-          description="Tasks needing attention"
+          description={currentTranslations.tasksNeedingAttention || "Tasks needing attention"}
           className="bg-card border-primary/20"
           iconClassName="text-primary"
         />
         <StatCard
-          title="Components Low Stock"
+          title={currentTranslations.componentsLowStock || "Components Low Stock"}
           value={lowStockComponents}
           icon={AlertTriangle}
-          description="Order new parts soon"
+          description={currentTranslations.orderNewPartsSoon || "Order new parts soon"}
           className="bg-card border-destructive/30"
           iconClassName="text-destructive"
         />
         <StatCard
-          title="Completed This Week"
+          title={currentTranslations.completedThisWeek || "Completed This Week"}
           value={completedWeeklyTasks}
           icon={ListChecks}
-          description="Weekly maintenance tasks"
+          description={currentTranslations.weeklyMaintenanceTasks || "Weekly maintenance tasks"}
           className="bg-card border-green-500/30"
           iconClassName="text-green-500"
         />
         <StatCard
-          title="Machines Operational"
+          title={currentTranslations.machinesOperational || "Machines Operational"}
           value={machinesOperational}
           icon={CheckCircle2}
-          description="Overall equipment effectiveness"
+          description={currentTranslations.overallEquipmentEffectiveness || "Overall equipment effectiveness"}
           className="bg-card border-blue-500/30"
           iconClassName="text-blue-500"
         />
       </div>
 
       <section className="mt-10">
-        <h2 className="mb-4 text-2xl font-semibold text-foreground">Quick Actions</h2>
+        <h2 className="mb-4 text-2xl font-semibold text-foreground">{currentTranslations.quickActions || "Quick Actions"}</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Link href="/dashboard/maintenance" className="block">
             <Card className="hover:bg-accent/50 transition-colors p-6 flex items-center gap-4 shadow-md">
               <Wrench className="h-8 w-8 text-primary" />
               <div>
-                <h3 className="font-semibold text-lg text-foreground">Maintenance Tasks</h3>
-                <p className="text-sm text-muted-foreground">View all maintenance tasks</p>
+                <h3 className="font-semibold text-lg text-foreground">{currentTranslations.sidebarMaintenanceTasks || "Maintenance Tasks"}</h3>
+                <p className="text-sm text-muted-foreground">{currentTranslations.viewAllMaintenanceTasks || "View all maintenance tasks"}</p>
               </div>
             </Card>
           </Link>
@@ -169,8 +202,8 @@ export default function DashboardPage() {
             <Card className="hover:bg-accent/50 transition-colors p-6 flex items-center gap-4 shadow-md">
               <ClipboardList className="h-8 w-8 text-primary" />
               <div>
-                <h3 className="font-semibold text-lg text-foreground">Maintenance Log</h3>
-                <p className="text-sm text-muted-foreground">View historical task log</p>
+                <h3 className="font-semibold text-lg text-foreground">{currentTranslations.sidebarMaintenanceLog || "Maintenance Log"}</h3>
+                <p className="text-sm text-muted-foreground">{currentTranslations.viewHistoricalTaskLog || "View historical task log"}</p>
               </div>
             </Card>
           </Link>
@@ -178,8 +211,8 @@ export default function DashboardPage() {
             <Card className="hover:bg-accent/50 transition-colors p-6 flex items-center gap-4 shadow-md">
               <PackageCheck className="h-8 w-8 text-primary" />
               <div>
-                <h3 className="font-semibold text-lg text-foreground">Component Stock</h3>
-                <p className="text-sm text-muted-foreground">Check inventory levels</p>
+                <h3 className="font-semibold text-lg text-foreground">{currentTranslations.sidebarComponentStock || "Component Stock"}</h3>
+                <p className="text-sm text-muted-foreground">{currentTranslations.checkInventoryLevels || "Check inventory levels"}</p>
               </div>
             </Card>
           </Link>
@@ -187,8 +220,8 @@ export default function DashboardPage() {
             <Card className="hover:bg-accent/50 transition-colors p-6 flex items-center gap-4 shadow-md">
               <BookOpenText className="h-8 w-8 text-primary" />
               <div>
-                <h3 className="font-semibold text-lg text-foreground">Maintenance Manuals</h3>
-                <p className="text-sm text-muted-foreground">Access PDF guides</p>
+                <h3 className="font-semibold text-lg text-foreground">{currentTranslations.sidebarManuals || "Maintenance Manuals"}</h3>
+                <p className="text-sm text-muted-foreground">{currentTranslations.accessPdfGuides || "Access PDF guides"}</p>
               </div>
             </Card>
           </Link>
@@ -197,3 +230,5 @@ export default function DashboardPage() {
     </>
   );
 }
+
+    

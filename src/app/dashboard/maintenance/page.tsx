@@ -10,8 +10,8 @@ import { PlusCircle, ListChecks, Sunrise, CalendarDays, CalendarRange } from "lu
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { translations, type SupportedLanguage, languageMap } from "../settings/page";
 
-// Define task types here as they are specific to this combined page structure now
 export interface DailyTask {
   id: string;
   taskName: string;
@@ -71,6 +71,34 @@ export default function MaintenanceTasksPage() {
   const [hasInitialized, setHasInitialized] = useState(false);
   const { toast } = useToast();
 
+  const [currentTranslations, setCurrentTranslations] = useState(translations.en);
+  const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>("en");
+
+  useEffect(() => {
+    const loadLanguage = () => {
+      const savedLanguage = localStorage.getItem("userLanguage") as SupportedLanguage | null;
+      if (savedLanguage && languageMap[savedLanguage]) {
+        setSelectedLanguage(savedLanguage);
+        setCurrentTranslations(translations[savedLanguage] || translations.en);
+      } else {
+        setSelectedLanguage("en");
+        setCurrentTranslations(translations.en);
+      }
+    };
+    loadLanguage();
+
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'userLanguage') {
+        loadLanguage();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+
   const loadTasks = () => {
     const storedDaily = localStorage.getItem("dailyTasks");
     setDailyTasks(storedDaily ? JSON.parse(storedDaily) : initialDailyTasks);
@@ -127,8 +155,8 @@ export default function MaintenanceTasksPage() {
       setMonthlyTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
     }
     toast({
-      title: `${type.charAt(0).toUpperCase() + type.slice(1)} Task Deleted`,
-      description: `The task "${taskName}" has been successfully deleted.`,
+      title: `${type.charAt(0).toUpperCase() + type.slice(1)} Task Deleted`, // This could be translated
+      description: `The task "${taskName}" has been successfully deleted.`, // This could be translated
       variant: "destructive",
     });
   };
@@ -148,13 +176,13 @@ export default function MaintenanceTasksPage() {
   const getButtonInfo = () => {
     switch (activeTab) {
       case "daily":
-        return { text: "Add New Daily Task", href: "/dashboard/maintenance/daily/new", icon: Sunrise };
+        return { text: currentTranslations.addNewDailyTask || "Add New Daily Task", href: "/dashboard/maintenance/daily/new", icon: Sunrise };
       case "weekly":
-        return { text: "Add New Weekly Task", href: "/dashboard/maintenance/weekly/new", icon: CalendarDays };
+        return { text: currentTranslations.addNewWeeklyTask || "Add New Weekly Task", href: "/dashboard/maintenance/weekly/new", icon: CalendarDays };
       case "monthly":
-        return { text: "Add New Monthly Task", href: "/dashboard/maintenance/monthly/new", icon: CalendarRange };
+        return { text: currentTranslations.addNewMonthlyTask || "Add New Monthly Task", href: "/dashboard/maintenance/monthly/new", icon: CalendarRange };
       default:
-        return { text: "Add New Task", href: "#", icon: PlusCircle };
+        return { text: currentTranslations.addNewTask || "Add New Task", href: "#", icon: PlusCircle };
     }
   };
 
@@ -163,8 +191,8 @@ export default function MaintenanceTasksPage() {
   return (
     <>
       <PageHeader
-        title="Maintenance Tasks"
-        description="Manage and track all maintenance activities."
+        title={currentTranslations.pageTitleMaintenanceTasks || "Maintenance Tasks"}
+        description={currentTranslations.pageDescriptionMaintenanceTasks || "Manage and track all maintenance activities."}
       >
         <Button asChild className="w-full sm:w-auto">
           <Link href={buttonHref}>
@@ -175,9 +203,9 @@ export default function MaintenanceTasksPage() {
 
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "daily" | "weekly" | "monthly")} className="w-full">
         <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-6">
-          <TabsTrigger value="daily" className="py-2">Daily Tasks</TabsTrigger>
-          <TabsTrigger value="weekly" className="py-2">Weekly Tasks</TabsTrigger>
-          <TabsTrigger value="monthly" className="py-2">Monthly Tasks</TabsTrigger>
+          <TabsTrigger value="daily" className="py-2">{currentTranslations.dailyTasksTab || "Daily Tasks"}</TabsTrigger>
+          <TabsTrigger value="weekly" className="py-2">{currentTranslations.weeklyTasksTab || "Weekly Tasks"}</TabsTrigger>
+          <TabsTrigger value="monthly" className="py-2">{currentTranslations.monthlyTasksTab || "Monthly Tasks"}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="daily">
@@ -195,7 +223,7 @@ export default function MaintenanceTasksPage() {
           {hasInitialized && dailyTasks.length === 0 && (
             <div className="col-span-full text-center py-10 text-muted-foreground">
               <ListChecks className="mx-auto h-12 w-12" />
-              <p className="mt-2">No daily tasks found.</p>
+              <p className="mt-2">{currentTranslations.noDailyTasksFound || "No daily tasks found."}</p>
             </div>
           )}
         </TabsContent>
@@ -215,7 +243,7 @@ export default function MaintenanceTasksPage() {
           {hasInitialized && weeklyTasks.length === 0 && (
             <div className="col-span-full text-center py-10 text-muted-foreground">
               <ListChecks className="mx-auto h-12 w-12" />
-              <p className="mt-2">No weekly tasks found.</p>
+              <p className="mt-2">{currentTranslations.noWeeklyTasksFound || "No weekly tasks found."}</p>
             </div>
           )}
         </TabsContent>
@@ -235,7 +263,7 @@ export default function MaintenanceTasksPage() {
           {hasInitialized && monthlyTasks.length === 0 && (
             <div className="col-span-full text-center py-10 text-muted-foreground">
               <ListChecks className="mx-auto h-12 w-12" />
-              <p className="mt-2">No monthly tasks found.</p>
+              <p className="mt-2">{currentTranslations.noMonthlyTasksFound || "No monthly tasks found."}</p>
             </div>
           )}
         </TabsContent>
@@ -243,3 +271,5 @@ export default function MaintenanceTasksPage() {
     </>
   );
 }
+
+    

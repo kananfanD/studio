@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, UploadCloud, BookOpenText } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import { translations, type SupportedLanguage, languageMap } from "../settings/page";
 
 export interface Manual {
   id: string;
@@ -31,6 +32,34 @@ export default function ManualBookPage() {
   const [hasInitialized, setHasInitialized] = useState(false);
   const { toast } = useToast();
 
+  const [currentTranslations, setCurrentTranslations] = useState(translations.en);
+  const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>("en");
+
+  useEffect(() => {
+    const loadLanguage = () => {
+      const savedLanguage = localStorage.getItem("userLanguage") as SupportedLanguage | null;
+      if (savedLanguage && languageMap[savedLanguage]) {
+        setSelectedLanguage(savedLanguage);
+        setCurrentTranslations(translations[savedLanguage] || translations.en);
+      } else {
+        setSelectedLanguage("en");
+        setCurrentTranslations(translations.en);
+      }
+    };
+    loadLanguage();
+
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'userLanguage') {
+        loadLanguage();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+
   useEffect(() => {
     const storedManuals = localStorage.getItem("manuals");
     if (storedManuals) {
@@ -42,6 +71,7 @@ export default function ManualBookPage() {
       }
     } else {
       setManuals(initialManuals);
+      localStorage.setItem("manuals", JSON.stringify(initialManuals));
     }
     setHasInitialized(true);
   }, []);
@@ -55,8 +85,8 @@ export default function ManualBookPage() {
   const handleDeleteManual = (manualId: string) => {
     setManuals(prevManuals => prevManuals.filter(manual => manual.id !== manualId));
     toast({
-      title: "Manual Deleted",
-      description: "The manual has been successfully deleted.",
+      title: currentTranslations.manualDeletedToastTitle || "Manual Deleted",
+      description: currentTranslations.manualDeletedToastDescription || "The manual has been successfully deleted.",
       variant: "destructive",
     });
   };
@@ -64,12 +94,12 @@ export default function ManualBookPage() {
   return (
     <>
       <PageHeader 
-        title="Maintenance Manuals"
-        description="Access and manage all technical manuals and guides."
+        title={currentTranslations.pageTitleManuals || "Maintenance Manuals"}
+        description={currentTranslations.pageDescriptionManuals || "Access and manage all technical manuals and guides."}
       >
         <Button asChild>
           <Link href="/dashboard/manuals/new">
-            <UploadCloud className="mr-2 h-4 w-4" /> Upload New Manual
+            <UploadCloud className="mr-2 h-4 w-4" /> {currentTranslations.uploadNewManualButton || "Upload New Manual"}
           </Link>
         </Button>
       </PageHeader>
@@ -84,15 +114,15 @@ export default function ManualBookPage() {
             dataAihint={manual.dataAihint}
           />
         ))}
-        {manuals.length === 0 && (
+        {hasInitialized && manuals.length === 0 && (
           <div className="col-span-full text-center py-10">
             <BookOpenText className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-2 text-sm font-medium text-foreground">No manuals found</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Get started by uploading a new manual.</p>
+            <h3 className="mt-2 text-sm font-medium text-foreground">{currentTranslations.noManualsFound || "No manuals found"}</h3>
+            <p className="mt-1 text-sm text-muted-foreground">{currentTranslations.getStartedByUploadingManual || "Get started by uploading a new manual."}</p>
             <div className="mt-6">
               <Button asChild>
                 <Link href="/dashboard/manuals/new">
-                  <PlusCircle className="mr-2 h-4 w-4" /> Upload Manual
+                  <PlusCircle className="mr-2 h-4 w-4" /> {currentTranslations.uploadManualButton || "Upload Manual"}
                 </Link>
               </Button>
             </div>
@@ -102,3 +132,5 @@ export default function ManualBookPage() {
     </>
   );
 }
+
+    

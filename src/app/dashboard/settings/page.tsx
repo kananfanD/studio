@@ -12,9 +12,9 @@ import { Moon, Sun, Trash2, UserCircle2, Bell, Languages, ArrowLeft } from "luci
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 
-type SupportedLanguage = "en" | "id" | "ja" | "ko" | "zh-TW";
+export type SupportedLanguage = "en" | "id" | "ja" | "ko" | "zh-TW";
 
-const languageMap: Record<SupportedLanguage, string> = {
+export const languageMap: Record<SupportedLanguage, string> = {
   "en": "English",
   "id": "Indonesian",
   "ja": "Japanese",
@@ -55,10 +55,36 @@ const englishTranslations = {
   notificationsDisabledToast: "Notifications disabled.",
   languageChangedToast: "Language Changed",
   languageSetToToast: "Language set to {lang}. (UI translation not yet implemented)",
+
+  // Sidebar labels
+  sidebarDashboard: "Dashboard",
+  sidebarMaintenanceTasks: "Maintenance Tasks",
+  sidebarMaintenanceLog: "Maintenance Log",
+  sidebarComponentStock: "Component Stock",
+  sidebarManuals: "Manuals",
+  sidebarProfile: "Profile",
+  sidebarSettings: "Settings",
+  sidebarLogout: "Log out",
+  sidebarMyAccount: "My Account",
+
+
+  // Page Headers
+  pageTitleDashboard: "Welcome, {userName}!",
+  pageDescriptionDashboard: "Here's a summary of your maintenance activities.",
+  pageTitleMaintenanceTasks: "Maintenance Tasks",
+  pageDescriptionMaintenanceTasks: "Manage and track all maintenance activities.",
+  pageTitleMaintenanceLog: "Maintenance Task Log",
+  pageDescriptionMaintenanceLog: "A historical log of all daily, weekly, and monthly maintenance tasks.",
+  pageTitleComponentStock: "Component Stock Management",
+  pageDescriptionComponentStock: "Track inventory levels for all machine components.",
+  pageTitleManuals: "Maintenance Manuals",
+  pageDescriptionManuals: "Access and manage all technical manuals and guides.",
+  pageTitleProfile: "My Profile",
+  pageDescriptionProfile: "Manage your account details and preferences.",
 };
 
 // Simple translation dictionary for demonstration
-const translations: Record<SupportedLanguage, Record<string, string>> = {
+export const translations: Record<SupportedLanguage, Record<string, string>> = {
   en: englishTranslations,
   id: {
     settingsTitle: "Pengaturan",
@@ -92,11 +118,36 @@ const translations: Record<SupportedLanguage, Record<string, string>> = {
     notificationsDisabledToast: "Notifikasi dinonaktifkan.",
     languageChangedToast: "Bahasa Diubah",
     languageSetToToast: "Bahasa diatur ke {lang}. (Terjemahan UI belum diimplementasikan)",
+
+    // Sidebar labels - Indonesian
+    sidebarDashboard: "Dasbor",
+    sidebarMaintenanceTasks: "Tugas Perawatan",
+    sidebarMaintenanceLog: "Log Perawatan",
+    sidebarComponentStock: "Stok Komponen",
+    sidebarManuals: "Manual",
+    sidebarProfile: "Profil",
+    sidebarSettings: "Pengaturan",
+    sidebarLogout: "Keluar",
+    sidebarMyAccount: "Akun Saya",
+
+    // Page Headers - Indonesian
+    pageTitleDashboard: "Selamat Datang, {userName}!",
+    pageDescriptionDashboard: "Berikut adalah ringkasan aktivitas perawatan Anda.",
+    pageTitleMaintenanceTasks: "Tugas Perawatan",
+    pageDescriptionMaintenanceTasks: "Kelola dan lacak semua aktivitas perawatan.",
+    pageTitleMaintenanceLog: "Log Tugas Perawatan",
+    pageDescriptionMaintenanceLog: "Log historis dari semua tugas perawatan harian, mingguan, dan bulanan.",
+    pageTitleComponentStock: "Manajemen Stok Komponen",
+    pageDescriptionComponentStock: "Lacak tingkat inventaris untuk semua komponen mesin.",
+    pageTitleManuals: "Manual Perawatan",
+    pageDescriptionManuals: "Akses dan kelola semua manual dan panduan teknis.",
+    pageTitleProfile: "Profil Saya",
+    pageDescriptionProfile: "Kelola detail akun dan preferensi Anda.",
   },
   // Other languages would be stubs for this demo, referencing the pre-defined englishTranslations
-  ja: { ...englishTranslations, settingsTitle: "設定" }, // Stub
-  ko: { ...englishTranslations, settingsTitle: "설정" }, // Stub
-  "zh-TW": { ...englishTranslations, settingsTitle: "設置" }, // Stub
+  ja: { ...englishTranslations, settingsTitle: "設定", sidebarDashboard: "ダッシュボード" }, // Stub
+  ko: { ...englishTranslations, settingsTitle: "설정", sidebarDashboard: "대시보드" }, // Stub
+  "zh-TW": { ...englishTranslations, settingsTitle: "設置", sidebarDashboard: "儀表板" }, // Stub
 };
 
 export default function SettingsPage() {
@@ -121,13 +172,39 @@ export default function SettingsPage() {
     const savedNotifications = localStorage.getItem("notificationsEnabled");
     setNotificationsEnabled(savedNotifications === "true");
 
-    const savedLanguage = localStorage.getItem("userLanguage") as SupportedLanguage | null;
-    if (savedLanguage && languageMap[savedLanguage]) {
-      setSelectedLanguage(savedLanguage);
-      setT(translations[savedLanguage] || translations.en);
-    } else {
-      setT(translations.en); // Default to English
-    }
+    const loadLanguage = () => {
+      const savedLanguage = localStorage.getItem("userLanguage") as SupportedLanguage | null;
+      if (savedLanguage && languageMap[savedLanguage]) {
+        setSelectedLanguage(savedLanguage);
+        setT(translations[savedLanguage] || translations.en);
+      } else {
+        setSelectedLanguage("en");
+        setT(translations.en); // Default to English
+      }
+    };
+    loadLanguage();
+
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'userLanguage') {
+        loadLanguage();
+      }
+      if (event.key === 'theme') {
+        const newTheme = event.newValue;
+        if (newTheme === "dark") {
+          document.documentElement.classList.add("dark");
+          setIsDarkMode(true);
+        } else {
+          document.documentElement.classList.remove("dark");
+          setIsDarkMode(false);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+
   }, []);
 
   // Update translations when selectedLanguage changes
@@ -136,20 +213,15 @@ export default function SettingsPage() {
   }, [selectedLanguage]);
 
   const toggleTheme = (checked: boolean) => {
-    if (checked) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-      setIsDarkMode(true);
-      toast({ title: t.themeChangedToast, description: t.darkModeEnabledToast });
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-      setIsDarkMode(false);
-      toast({ title: t.themeChangedToast, description: t.lightModeEnabledToast });
-    }
-     window.dispatchEvent(new StorageEvent('storage', {
+    const newTheme = checked ? "dark" : "light";
+    document.documentElement.classList.toggle("dark", checked);
+    localStorage.setItem("theme", newTheme);
+    setIsDarkMode(checked);
+    toast({ title: t.themeChangedToast, description: checked ? t.darkModeEnabledToast : t.lightModeEnabledToast });
+    
+    window.dispatchEvent(new StorageEvent('storage', {
       key: 'theme',
-      newValue: checked ? 'dark' : 'light',
+      newValue: newTheme,
       storageArea: localStorage,
     }));
   };
@@ -160,12 +232,12 @@ export default function SettingsPage() {
     setIsDarkMode(false);
     toast({
       title: t.themeResetToast,
-      description: t.themeResetDescriptionToast, // Corrected from themeResetDescriptionToast
-      variant: "destructive", // Added variant for consistency
+      description: t.themeResetDescriptionToast, 
+      variant: "destructive", 
     });
      window.dispatchEvent(new StorageEvent('storage', {
       key: 'theme',
-      newValue: 'light',
+      newValue: 'light', // Explicitly set to light as default
       storageArea: localStorage,
     }));
   };
@@ -188,7 +260,11 @@ export default function SettingsPage() {
       title: (translations[newLang] || translations.en).languageChangedToast, 
       description: (translations[newLang] || translations.en).languageSetToToast.replace("{lang}", languageMap[newLang]),
     });
-    // For a full app, you'd trigger a global language update here
+    window.dispatchEvent(new StorageEvent('storage', {
+        key: 'userLanguage',
+        newValue: newLang,
+        storageArea: localStorage,
+    }));
   };
 
   return (
@@ -309,7 +385,8 @@ export default function SettingsPage() {
                 </Select>
             </div>
             <p className="text-sm text-muted-foreground">
-              {t.languagePlaceholder}
+              {/* This specific placeholder might remain in English or be translated if critical */}
+              {translations[selectedLanguage]?.languagePlaceholder || englishTranslations.languagePlaceholder}
             </p>
           </CardContent>
         </Card>
@@ -317,3 +394,6 @@ export default function SettingsPage() {
     </>
   );
 }
+
+
+    

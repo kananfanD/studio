@@ -13,7 +13,6 @@ import {
   Settings2,
   ClipboardList,
   Wrench, 
-  Menu as MenuIcon,
 } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { Button } from '@/components/ui/button';
@@ -29,16 +28,25 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ComponentType } from 'react';
+import { translations, type SupportedLanguage, languageMap } from '@/app/dashboard/settings/page';
 
 type UserRole = "operator" | "maintenance" | "warehouse" | null;
 
-const allNavItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['operator', 'maintenance', 'warehouse'] },
-  { href: '/dashboard/maintenance', label: 'Maintenance Tasks', icon: Wrench, roles: ['operator', 'maintenance'] },
-  { href: '/dashboard/inventory', label: 'Maintenance Log', icon: ClipboardList, roles: ['maintenance'] },
-  { href: '/dashboard/stock', label: 'Component Stock', icon: Archive, roles: ['warehouse', 'maintenance'] },
-  { href: '/dashboard/manuals', label: 'Manuals', icon: BookOpenText, roles: ['operator', 'maintenance'] },
+interface NavItem {
+  href: string;
+  labelKey: keyof typeof translations.en; // Use keyof to ensure labelKey exists in translations
+  icon: ComponentType<any>; // LucideIcon type is complex, using any for simplicity here
+  roles: UserRole[];
+}
+
+
+const allNavItems: NavItem[] = [
+  { href: '/dashboard', labelKey: 'sidebarDashboard', icon: LayoutDashboard, roles: ['operator', 'maintenance', 'warehouse'] },
+  { href: '/dashboard/maintenance', labelKey: 'sidebarMaintenanceTasks', icon: Wrench, roles: ['operator', 'maintenance'] },
+  { href: '/dashboard/inventory', labelKey: 'sidebarMaintenanceLog', icon: ClipboardList, roles: ['maintenance'] },
+  { href: '/dashboard/stock', labelKey: 'sidebarComponentStock', icon: Archive, roles: ['warehouse', 'maintenance'] },
+  { href: '/dashboard/manuals', labelKey: 'sidebarManuals', icon: BookOpenText, roles: ['operator', 'maintenance'] },
 ];
 
 interface DashboardSidebarProps {
@@ -62,11 +70,13 @@ export default function DashboardSidebar({ isOpen, onToggle, userRole, isMobileV
   const { toast } = useToast();
   const [userName, setUserName] = useState(DEFAULT_USER_NAME);
   const [userAvatarUrl, setUserAvatarUrl] = useState(DEFAULT_AVATAR_PLACEHOLDER);
+  
+  const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>("en");
+  const [currentTranslations, setCurrentTranslations] = useState(translations.en);
 
   const showText = isMobileView ? true : isOpen;
 
-
-  const loadProfile = () => {
+  const loadProfileAndLanguage = () => {
     if (typeof window !== 'undefined') {
       const storedProfileString = localStorage.getItem("userProfile");
       if (storedProfileString) {
@@ -75,7 +85,6 @@ export default function DashboardSidebar({ isOpen, onToggle, userRole, isMobileV
           setUserName(storedProfile.name || DEFAULT_USER_NAME);
           setUserAvatarUrl(storedProfile.avatarUrl || DEFAULT_AVATAR_PLACEHOLDER);
         } catch (e) {
-          console.error("Failed to parse userProfile from localStorage in sidebar", e);
           setUserName(DEFAULT_USER_NAME);
           setUserAvatarUrl(DEFAULT_AVATAR_PLACEHOLDER);
         }
@@ -83,15 +92,24 @@ export default function DashboardSidebar({ isOpen, onToggle, userRole, isMobileV
           setUserName(DEFAULT_USER_NAME);
           setUserAvatarUrl(DEFAULT_AVATAR_PLACEHOLDER);
       }
+
+      const savedLanguage = localStorage.getItem("userLanguage") as SupportedLanguage | null;
+      if (savedLanguage && languageMap[savedLanguage]) {
+        setSelectedLanguage(savedLanguage);
+        setCurrentTranslations(translations[savedLanguage] || translations.en);
+      } else {
+        setSelectedLanguage("en");
+        setCurrentTranslations(translations.en);
+      }
     }
   };
 
   useEffect(() => {
-    loadProfile(); 
+    loadProfileAndLanguage(); 
 
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'userProfile' || event.key === 'userRole') { 
-        loadProfile();
+      if (event.key === 'userProfile' || event.key === 'userRole' || event.key === 'userLanguage') { 
+        loadProfileAndLanguage();
       }
     };
     if (typeof window !== 'undefined') {
@@ -107,10 +125,11 @@ export default function DashboardSidebar({ isOpen, onToggle, userRole, isMobileV
     if (typeof window !== 'undefined') {
       localStorage.removeItem("equipCareUserLoggedIn");
       localStorage.removeItem("userRole"); 
+      // localStorage.removeItem("userLanguage"); // Optionally reset language on logout
     }
     toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out.",
+      title: currentTranslations.sidebarLogout || "Logged Out",
+      description: "You have been successfully logged out.", // This could also be translated
     });
     router.push('/'); 
   };
@@ -139,25 +158,28 @@ export default function DashboardSidebar({ isOpen, onToggle, userRole, isMobileV
         <Logo iconSize={6} textSize="text-xl" hideText={!showText} className="ml-0" />
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-2">
-        {visibleNavItems.map((item) => (
-          <Link key={item.label} href={item.href} passHref>
-            <Button
-              variant={pathname.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard') ? 'secondary' : 'ghost'}
-              className={cn(
-                "w-full justify-start",
-                pathname.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard')
-                ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                !showText && "justify-center h-12 w-12 p-0" 
-              )}
-              title={item.label}
-              onClick={() => isMobileView && onToggle()} 
-            >
-              <item.icon className={cn("mr-3 h-5 w-5", !showText && "mr-0")} />
-              {showText && item.label}
-            </Button>
-          </Link>
-        ))}
+        {visibleNavItems.map((item) => {
+          const label = currentTranslations[item.labelKey] || item.labelKey.replace('sidebar','');
+          return (
+            <Link key={item.labelKey} href={item.href} passHref>
+              <Button
+                variant={pathname.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard') ? 'secondary' : 'ghost'}
+                className={cn(
+                  "w-full justify-start",
+                  pathname.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard')
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                  !showText && "justify-center h-12 w-12 p-0" 
+                )}
+                title={label}
+                onClick={() => isMobileView && onToggle()} 
+              >
+                <item.icon className={cn("mr-3 h-5 w-5", !showText && "mr-0")} />
+                {showText && label}
+              </Button>
+            </Link>
+          );
+        })}
       </nav>
       <Separator className="bg-sidebar-border" />
       <div className={cn("p-2", !showText && "p-1")}>
@@ -169,7 +191,7 @@ export default function DashboardSidebar({ isOpen, onToggle, userRole, isMobileV
                 "w-full justify-start hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                 !showText && "justify-center h-12 w-12 p-0"
               )}
-              title="My Account"
+              title={currentTranslations.sidebarMyAccount || "My Account"}
             >
               <Avatar className={cn("mr-3 h-8 w-8", !showText && "mr-0")}>
                 <AvatarImage src={userAvatarUrl} alt={userName} data-ai-hint="user profile"/>
@@ -185,24 +207,24 @@ export default function DashboardSidebar({ isOpen, onToggle, userRole, isMobileV
             align={isMobileView ? "center" : (isOpen ? "start" : "center")} 
             sideOffset={isMobileView ? 4 : (isOpen ? 0 : 8)}
           >
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuLabel>{currentTranslations.sidebarMyAccount || "My Account"}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild onClick={() => isMobileView && onToggle()}>
               <Link href="/dashboard/profile">
                 <UserCircle2 className="mr-2 h-4 w-4" />
-                <span>Profile</span>
+                <span>{currentTranslations.sidebarProfile || "Profile"}</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild onClick={() => isMobileView && onToggle()}>
               <Link href="/dashboard/settings">
                 <Settings2 className="mr-2 h-4 w-4" />
-                <span>Settings</span>
+                <span>{currentTranslations.sidebarSettings || "Settings"}</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => {handleLogout(); if(isMobileView) onToggle();}} className="text-destructive focus:bg-destructive/30 focus:text-destructive-foreground">
               <LogOut className="mr-2 h-4 w-4" />
-              <span>Log out</span>
+              <span>{currentTranslations.sidebarLogout || "Log out"}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -223,3 +245,6 @@ export default function DashboardSidebar({ isOpen, onToggle, userRole, isMobileV
     </aside>
   );
 }
+
+
+    

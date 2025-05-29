@@ -25,6 +25,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Save, UserCircle2 } from "lucide-react";
 import Link from "next/link";
+import { translations, type SupportedLanguage, languageMap } from "../settings/page";
 
 const profileFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -49,6 +50,33 @@ export default function ProfilePage() {
     avatarUrl: DEFAULT_AVATAR_PLACEHOLDER,
   });
 
+  const [currentTranslations, setCurrentTranslations] = useState(translations.en);
+  const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>("en");
+
+  useEffect(() => {
+    const loadLanguage = () => {
+      const savedLanguage = localStorage.getItem("userLanguage") as SupportedLanguage | null;
+      if (savedLanguage && languageMap[savedLanguage]) {
+        setSelectedLanguage(savedLanguage);
+        setCurrentTranslations(translations[savedLanguage] || translations.en);
+      } else {
+        setSelectedLanguage("en");
+        setCurrentTranslations(translations.en);
+      }
+    };
+    loadLanguage();
+
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'userLanguage') {
+        loadLanguage();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -67,16 +95,14 @@ export default function ProfilePage() {
         setCurrentUser(storedProfile);
         form.reset({
           name: storedProfile.name || DEFAULT_USER_NAME,
-          avatarUrl: storedProfile.avatarUrl || "", // Keep form avatarUrl as data URI or empty
+          avatarUrl: storedProfile.avatarUrl || "", 
         });
       } catch (e) {
         console.error("Failed to parse userProfile from localStorage", e);
-        // Use default values if parsing fails
         setCurrentUser({ name: DEFAULT_USER_NAME, avatarUrl: DEFAULT_AVATAR_PLACEHOLDER });
         form.reset({ name: DEFAULT_USER_NAME, avatarUrl: "" });
       }
     } else {
-        // If no profile, set form to defaults and current user to placeholder
         setCurrentUser({ name: DEFAULT_USER_NAME, avatarUrl: DEFAULT_AVATAR_PLACEHOLDER });
         form.reset({ name: DEFAULT_USER_NAME, avatarUrl: "" });
     }
@@ -96,15 +122,12 @@ export default function ProfilePage() {
   function onSubmit(data: ProfileFormValues) {
     const newProfile: UserProfile = {
       name: data.name,
-      // If a new avatar was uploaded (data.avatarUrl is a data URI), use it.
-      // Otherwise, keep the existing currentUser.avatarUrl (which might be a placeholder or a previous upload).
       avatarUrl: data.avatarUrl ? data.avatarUrl : currentUser.avatarUrl,
     };
     
     localStorage.setItem("userProfile", JSON.stringify(newProfile));
-    setCurrentUser(newProfile); // Update displayed user info immediately
+    setCurrentUser(newProfile); 
     
-    // Dispatch a storage event so other parts of the app (like the sidebar) can react
     window.dispatchEvent(new StorageEvent('storage', {
       key: 'userProfile',
       newValue: JSON.stringify(newProfile),
@@ -112,8 +135,8 @@ export default function ProfilePage() {
     }));
 
     toast({
-      title: "Profile Updated",
-      description: "Your profile information has been saved.",
+      title: currentTranslations.profileUpdatedToastTitle || "Profile Updated",
+      description: currentTranslations.profileUpdatedToastDescription || "Your profile information has been saved.",
     });
   }
 
@@ -122,13 +145,13 @@ export default function ProfilePage() {
   return (
     <>
       <PageHeader
-        title="My Profile"
-        description="Manage your account details and preferences."
+        title={currentTranslations.pageTitleProfile || "My Profile"}
+        description={currentTranslations.pageDescriptionProfile || "Manage your account details and preferences."}
       >
         <Button variant="outline" asChild>
           <Link href="/dashboard">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
+            {currentTranslations.backToDashboard || "Back to Dashboard"}
           </Link>
         </Button>
       </PageHeader>
@@ -144,7 +167,7 @@ export default function ProfilePage() {
                 </AvatarFallback>
               </Avatar>
               <CardTitle className="text-2xl">{currentUser.name}</CardTitle>
-              <p className="text-sm text-muted-foreground">Member</p>
+              <p className="text-sm text-muted-foreground">{currentTranslations.memberRole || "Member"}</p>
             </CardHeader>
             <CardContent>
               {/* Additional profile info can be displayed here if needed */}
@@ -155,7 +178,7 @@ export default function ProfilePage() {
         <div className="md:col-span-2">
           <Card className="shadow-lg">
             <CardHeader>
-              <CardTitle>Edit Profile Information</CardTitle>
+              <CardTitle>{currentTranslations.editProfileInformationTitle || "Edit Profile Information"}</CardTitle>
             </CardHeader>
             <CardContent>
               <Form {...form}>
@@ -165,9 +188,9 @@ export default function ProfilePage() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Full Name</FormLabel>
+                        <FormLabel>{currentTranslations.fullNameLabel || "Full Name"}</FormLabel>
                         <FormControl>
-                          <Input placeholder="Your full name" {...field} />
+                          <Input placeholder={currentTranslations.yourFullNamePlaceholder || "Your full name"} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -176,19 +199,18 @@ export default function ProfilePage() {
                   <FormField
                     control={form.control}
                     name="avatarUrl" 
-                    render={({ field }) => ( // field.value will be the data URI from upload
+                    render={({ field }) => ( 
                       <FormItem>
-                        <FormLabel>Change Profile Picture</FormLabel>
+                        <FormLabel>{currentTranslations.changeProfilePictureLabel || "Change Profile Picture"}</FormLabel>
                         <FormControl>
                           <Input
                             type="file"
                             accept="image/*"
                             onChange={handleAvatarUpload}
-                            // File input value is managed by the browser, not directly by React Hook Form state
                           />
                         </FormControl>
                         <FormDescription>
-                          Upload a new image for your avatar. Recommended size: 200x200px.
+                          {currentTranslations.uploadAvatarDescription || "Upload a new image for your avatar. Recommended size: 200x200px."}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -196,7 +218,7 @@ export default function ProfilePage() {
                   />
                   {watchedAvatarUrl && (
                     <div className="mt-4">
-                      <FormLabel>New Avatar Preview</FormLabel>
+                      <FormLabel>{currentTranslations.newAvatarPreviewLabel || "New Avatar Preview"}</FormLabel>
                       <div className="relative mt-2 h-32 w-32 rounded-md border bg-muted/30 flex items-center justify-center">
                         <Image
                           src={watchedAvatarUrl}
@@ -212,7 +234,7 @@ export default function ProfilePage() {
 
                   <div className="flex justify-end pt-4">
                     <Button type="submit">
-                      <Save className="mr-2 h-4 w-4" /> Save Changes
+                      <Save className="mr-2 h-4 w-4" /> {currentTranslations.saveChangesButton || "Save Changes"}
                     </Button>
                   </div>
                 </form>

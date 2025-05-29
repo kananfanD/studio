@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Package } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import { translations, type SupportedLanguage, languageMap } from "../settings/page";
 
 export interface StockItem {
   id: string;
@@ -33,6 +34,33 @@ export default function ComponentStockPage() {
   const [hasInitialized, setHasInitialized] = useState(false);
   const { toast } = useToast();
 
+  const [currentTranslations, setCurrentTranslations] = useState(translations.en);
+  const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>("en");
+
+  useEffect(() => {
+    const loadLanguage = () => {
+      const savedLanguage = localStorage.getItem("userLanguage") as SupportedLanguage | null;
+      if (savedLanguage && languageMap[savedLanguage]) {
+        setSelectedLanguage(savedLanguage);
+        setCurrentTranslations(translations[savedLanguage] || translations.en);
+      } else {
+        setSelectedLanguage("en");
+        setCurrentTranslations(translations.en);
+      }
+    };
+    loadLanguage();
+    
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'userLanguage') {
+        loadLanguage();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
   useEffect(() => {
     const storedItems = localStorage.getItem("stockItems");
     if (storedItems) {
@@ -44,6 +72,7 @@ export default function ComponentStockPage() {
       }
     } else {
       setStockItems(initialStockItems);
+       localStorage.setItem("stockItems", JSON.stringify(initialStockItems));
     }
     setHasInitialized(true);
   }, []);
@@ -57,8 +86,8 @@ export default function ComponentStockPage() {
   const handleDeleteItem = (itemId: string) => {
     setStockItems(prevItems => prevItems.filter(item => item.id !== itemId));
     toast({
-      title: "Stock Item Deleted",
-      description: "The stock item has been successfully deleted.",
+      title: currentTranslations.stockItemDeletedToastTitle || "Stock Item Deleted",
+      description: currentTranslations.stockItemDeletedToastDescription || "The stock item has been successfully deleted.",
       variant: "destructive",
     });
   };
@@ -66,12 +95,12 @@ export default function ComponentStockPage() {
   return (
     <>
       <PageHeader 
-        title="Component Stock Management"
-        description="Track inventory levels for all machine components."
+        title={currentTranslations.pageTitleComponentStock || "Component Stock Management"}
+        description={currentTranslations.pageDescriptionComponentStock || "Track inventory levels for all machine components."}
       >
         <Button asChild>
           <Link href="/dashboard/stock/new">
-            <PlusCircle className="mr-2 h-4 w-4" /> Add New Component
+            <PlusCircle className="mr-2 h-4 w-4" /> {currentTranslations.addNewComponentButton || "Add New Component"}
           </Link>
         </Button>
       </PageHeader>
@@ -87,15 +116,15 @@ export default function ComponentStockPage() {
           />
         ))}
       </div>
-      {stockItems.length === 0 && (
+      {hasInitialized && stockItems.length === 0 && (
          <div className="col-span-full text-center py-10">
             <Package className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-2 text-sm font-medium text-foreground">No stock items found</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Get started by adding a new component.</p>
+            <h3 className="mt-2 text-sm font-medium text-foreground">{currentTranslations.noStockItemsFound || "No stock items found"}</h3>
+            <p className="mt-1 text-sm text-muted-foreground">{currentTranslations.getStartedByAddingComponent || "Get started by adding a new component."}</p>
             <div className="mt-6">
               <Button asChild>
                 <Link href="/dashboard/stock/new">
-                  <PlusCircle className="mr-2 h-4 w-4" /> Add Component
+                  <PlusCircle className="mr-2 h-4 w-4" /> {currentTranslations.addComponentButton || "Add Component"}
                 </Link>
               </Button>
             </div>
@@ -104,3 +133,5 @@ export default function ComponentStockPage() {
     </>
   );
 }
+
+    
