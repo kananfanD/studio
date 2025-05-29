@@ -22,11 +22,88 @@ const languageMap: Record<SupportedLanguage, string> = {
   "zh-TW": "Taiwanese",
 };
 
+// Simple translation dictionary for demonstration
+const translations: Record<SupportedLanguage, Record<string, string>> = {
+  en: {
+    settingsTitle: "Settings",
+    settingsDescription: "Manage your application preferences.",
+    backToDashboard: "Back to Dashboard",
+    appearanceTitle: "Appearance",
+    appearanceDescription: "Customize the look and feel of the application.",
+    darkModeLabel: "Dark Mode",
+    darkModeDescription: "Switch between light and dark themes.",
+    resetThemeButton: "Reset to Default Theme",
+    accountTitle: "Account",
+    accountDescription: "Manage your profile information.",
+    manageProfileButton: "Manage Profile",
+    manageProfileDescription: "Change your name, avatar, and other personal details.",
+    notificationsTitle: "Notifications",
+    notificationsDescription: "Configure how you receive notifications.",
+    enableNotificationsLabel: "Enable Notifications",
+    enableNotificationsDescription: "Toggle application notifications on or off.",
+    notificationsPlaceholder: "(This is a placeholder setting for the prototype and does not send actual notifications).",
+    languageTitle: "Language",
+    languageDescription: "Select your preferred language for the application.",
+    appLanguageLabel: "Application Language",
+    languagePlaceholder: "Note: Language selection is a placeholder. Actual UI translation is not yet implemented in this prototype.",
+    themeChangedToast: "Theme Changed",
+    darkModeEnabledToast: "Dark mode enabled.",
+    lightModeEnabledToast: "Light mode enabled.",
+    themeResetToast: "Theme Direset",
+    themeResetDescriptionToast: "Theme has been reset to default (Light).",
+    notificationSettingsUpdatedToast: "Notification Settings Updated",
+    notificationsEnabledToast: "Notifications enabled.",
+    notificationsDisabledToast: "Notifications disabled.",
+    languageChangedToast: "Language Changed",
+    languageSetToToast: "Language set to {lang}. (UI translation not yet implemented)",
+  },
+  id: {
+    settingsTitle: "Pengaturan",
+    settingsDescription: "Kelola preferensi aplikasi Anda.",
+    backToDashboard: "Kembali ke Dasbor",
+    appearanceTitle: "Tampilan",
+    appearanceDescription: "Sesuaikan tampilan dan nuansa aplikasi.",
+    darkModeLabel: "Mode Gelap",
+    darkModeDescription: "Beralih antara tema terang dan gelap.",
+    resetThemeButton: "Atur Ulang ke Tema Default",
+    accountTitle: "Akun",
+    accountDescription: "Kelola informasi profil Anda.",
+    manageProfileButton: "Kelola Profil",
+    manageProfileDescription: "Ubah nama, avatar, dan detail pribadi lainnya.",
+    notificationsTitle: "Notifikasi",
+    notificationsDescription: "Konfigurasikan cara Anda menerima notifikasi.",
+    enableNotificationsLabel: "Aktifkan Notifikasi",
+    enableNotificationsDescription: "Aktifkan atau nonaktifkan notifikasi aplikasi.",
+    notificationsPlaceholder: "(Ini adalah pengaturan placeholder untuk prototipe dan tidak mengirim notifikasi aktual).",
+    languageTitle: "Bahasa",
+    languageDescription: "Pilih bahasa pilihan Anda untuk aplikasi.",
+    appLanguageLabel: "Bahasa Aplikasi",
+    languagePlaceholder: "Catatan: Pilihan bahasa adalah placeholder. Terjemahan UI aktual belum diimplementasikan dalam prototipe ini.",
+    themeChangedToast: "Tema Diubah",
+    darkModeEnabledToast: "Mode gelap diaktifkan.",
+    lightModeEnabledToast: "Mode terang diaktifkan.",
+    themeResetToast: "Tema Direset",
+    themeResetDescriptionToast: "Tema telah direset ke default (Terang).",
+    notificationSettingsUpdatedToast: "Pengaturan Notifikasi Diperbarui",
+    notificationsEnabledToast: "Notifikasi diaktifkan.",
+    notificationsDisabledToast: "Notifikasi dinonaktifkan.",
+    languageChangedToast: "Bahasa Diubah",
+    languageSetToToast: "Bahasa diatur ke {lang}. (Terjemahan UI belum diimplementasikan)",
+  },
+  // Other languages would be stubs for this demo
+  ja: { ...translations.en, settingsTitle: "設定" }, // Stub
+  ko: { ...translations.en, settingsTitle: "설정" }, // Stub
+  "zh-TW": { ...translations.en, settingsTitle: "設置" }, // Stub
+};
+
 export default function SettingsPage() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>("en");
   const { toast } = useToast();
+
+  // State for translated texts on this page
+  const [t, setT] = useState(translations.en);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -39,29 +116,33 @@ export default function SettingsPage() {
     }
 
     const savedNotifications = localStorage.getItem("notificationsEnabled");
-    if (savedNotifications === "true") {
-      setNotificationsEnabled(true);
-    } else {
-      setNotificationsEnabled(false);
-    }
+    setNotificationsEnabled(savedNotifications === "true");
 
     const savedLanguage = localStorage.getItem("userLanguage") as SupportedLanguage | null;
     if (savedLanguage && languageMap[savedLanguage]) {
       setSelectedLanguage(savedLanguage);
+      setT(translations[savedLanguage] || translations.en);
+    } else {
+      setT(translations.en); // Default to English
     }
   }, []);
+
+  // Update translations when selectedLanguage changes
+  useEffect(() => {
+    setT(translations[selectedLanguage] || translations.en);
+  }, [selectedLanguage]);
 
   const toggleTheme = (checked: boolean) => {
     if (checked) {
       document.documentElement.classList.add("dark");
       localStorage.setItem("theme", "dark");
       setIsDarkMode(true);
-      toast({ title: "Theme Changed", description: "Dark mode enabled." });
+      toast({ title: t.themeChangedToast, description: t.darkModeEnabledToast });
     } else {
       document.documentElement.classList.remove("dark");
       localStorage.setItem("theme", "light");
       setIsDarkMode(false);
-      toast({ title: "Theme Changed", description: "Light mode enabled." });
+      toast({ title: t.themeChangedToast, description: t.lightModeEnabledToast });
     }
      window.dispatchEvent(new StorageEvent('storage', {
       key: 'theme',
@@ -75,8 +156,8 @@ export default function SettingsPage() {
     document.documentElement.classList.remove("dark");
     setIsDarkMode(false);
     toast({
-      title: "Theme Reset",
-      description: "Theme has been reset to default (Light).",
+      title: t.themeResetToast,
+      description: t.themeResetDescriptionToast,
       variant: "destructive",
     });
      window.dispatchEvent(new StorageEvent('storage', {
@@ -90,8 +171,8 @@ export default function SettingsPage() {
     localStorage.setItem("notificationsEnabled", String(checked));
     setNotificationsEnabled(checked);
     toast({
-      title: "Notification Settings Updated",
-      description: `Notifications ${checked ? "enabled" : "disabled"}.`,
+      title: t.notificationSettingsUpdatedToast,
+      description: checked ? t.notificationsEnabledToast : t.notificationsDisabledToast,
     });
   };
 
@@ -99,24 +180,24 @@ export default function SettingsPage() {
     const newLang = value as SupportedLanguage;
     setSelectedLanguage(newLang);
     localStorage.setItem("userLanguage", newLang);
+    // The useEffect for selectedLanguage will update 't'
     toast({
-      title: "Language Changed",
-      description: `Language set to ${languageMap[newLang]}. (UI translation not yet implemented)`,
+      title: t.languageChangedToast, // This will use the 'previous' language for the toast itself
+      description: (translations[newLang] || translations.en).languageSetToToast.replace("{lang}", languageMap[newLang]),
     });
-    // Note: Actual UI translation would require a more complex i18n setup.
-    // This currently only saves the preference.
+    // For a full app, you'd trigger a global language update here
   };
 
   return (
     <>
       <PageHeader
-        title="Settings"
-        description="Manage your application preferences."
+        title={t.settingsTitle}
+        description={t.settingsDescription}
       >
         <Button variant="outline" asChild>
           <Link href="/dashboard">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
+            {t.backToDashboard}
           </Link>
         </Button>
       </PageHeader>
@@ -124,15 +205,15 @@ export default function SettingsPage() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Appearance</CardTitle>
-            <CardDescription>Customize the look and feel of the application.</CardDescription>
+            <CardTitle>{t.appearanceTitle}</CardTitle>
+            <CardDescription>{t.appearanceDescription}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between space-x-2 p-4 border rounded-lg">
               <Label htmlFor="theme-toggle" className="flex flex-col space-y-1">
-                <span>Dark Mode</span>
+                <span>{t.darkModeLabel}</span>
                 <span className="font-normal leading-snug text-muted-foreground">
-                  Switch between light and dark themes.
+                  {t.darkModeDescription}
                 </span>
               </Label>
               <div className="flex items-center">
@@ -148,40 +229,40 @@ export default function SettingsPage() {
             </div>
              <Button variant="outline" onClick={handleResetTheme} className="w-full">
               <Trash2 className="mr-2 h-4 w-4" />
-              Reset to Default Theme
+              {t.resetThemeButton}
             </Button>
           </CardContent>
         </Card>
 
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Account</CardTitle>
-            <CardDescription>Manage your profile information.</CardDescription>
+            <CardTitle>{t.accountTitle}</CardTitle>
+            <CardDescription>{t.accountDescription}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Link href="/dashboard/profile" legacyBehavior>
               <Button variant="outline" className="w-full">
                 <UserCircle2 className="mr-2 h-4 w-4" />
-                Manage Profile
+                {t.manageProfileButton}
               </Button>
             </Link>
              <p className="text-sm text-muted-foreground">
-              Change your name, avatar, and other personal details.
+              {t.manageProfileDescription}
             </p>
           </CardContent>
         </Card>
 
          <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Notifications</CardTitle>
-            <CardDescription>Configure how you receive notifications.</CardDescription>
+            <CardTitle>{t.notificationsTitle}</CardTitle>
+            <CardDescription>{t.notificationsDescription}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between space-x-2 p-4 border rounded-lg">
               <Label htmlFor="notifications-toggle" className="flex flex-col space-y-1">
-                <span>Enable Notifications</span>
+                <span>{t.enableNotificationsLabel}</span>
                 <span className="font-normal leading-snug text-muted-foreground">
-                  Toggle application notifications on or off.
+                  {t.enableNotificationsDescription}
                 </span>
               </Label>
               <div className="flex items-center">
@@ -195,21 +276,21 @@ export default function SettingsPage() {
               </div>
             </div>
              <p className="text-sm text-muted-foreground">
-              (This is a placeholder setting for the prototype and does not send actual notifications).
+              {t.notificationsPlaceholder}
             </p>
           </CardContent>
         </Card>
 
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Language</CardTitle>
-            <CardDescription>Select your preferred language for the application.</CardDescription>
+            <CardTitle>{t.languageTitle}</CardTitle>
+            <CardDescription>{t.languageDescription}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between space-x-2 p-4 border rounded-lg">
                 <Label htmlFor="language-select" className="flex items-center space-x-2">
                   <Languages className="h-5 w-5 text-muted-foreground" />
-                  <span>Application Language</span>
+                  <span>{t.appLanguageLabel}</span>
                 </Label>
                 <Select value={selectedLanguage} onValueChange={handleLanguageChange}>
                   <SelectTrigger id="language-select" className="w-[180px]">
@@ -225,11 +306,12 @@ export default function SettingsPage() {
                 </Select>
             </div>
             <p className="text-sm text-muted-foreground">
-              Note: Language selection is a placeholder. Actual UI translation is not yet implemented in this prototype.
+              {t.languagePlaceholder}
             </p>
           </CardContent>
         </Card>
       </div>
     </>
   );
-}
+
+    
