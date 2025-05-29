@@ -1,5 +1,5 @@
 
-import { HardHat } from 'lucide-react'; // Changed from Settings to HardHat
+import { Cogs } from 'lucide-react'; // Changed from HardHat to Cogs
 import { cn } from '@/lib/utils';
 
 interface LogoProps {
@@ -14,7 +14,7 @@ const Logo = ({ className, iconSize = 8, textSize = "text-2xl", hideText = false
   
   return (
     <div className={cn("flex items-center gap-2 text-primary overflow-hidden", className)}>
-      <HardHat className={cn(`h-${numericIconSize} w-${numericIconSize} shrink-0`)} strokeWidth={2.5} />
+      <Cogs className={cn(`h-${numericIconSize} w-${numericIconSize} shrink-0`)} strokeWidth={2.5} />
       {!hideText && <span className={cn(textSize, "font-bold whitespace-nowrap")}>EquipCare Hub</span>}
     </div>
   );
