@@ -20,6 +20,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { LogIn } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useToast } from "@/hooks/use-toast";
+import Image from "next/image";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -54,7 +55,16 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-sky-100 p-4">
+    <div className="relative flex min-h-screen flex-col items-center justify-center p-4">
+      <Image
+        src="https://placehold.co/1920x1080.png" 
+        alt="Industrial Background"
+        layout="fill"
+        objectFit="cover"
+        className="absolute inset-0 z-0"
+        data-ai-hint="industrial background" 
+      />
+      <div className="absolute inset-0 bg-black/50 z-10"></div> 
       <Card className="w-full max-w-md shadow-xl z-20">
         <CardHeader className="items-center text-center">
           <Logo className="mb-4" iconSize={10} textSize="text-3xl" />
