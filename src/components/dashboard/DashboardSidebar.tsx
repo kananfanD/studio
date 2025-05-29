@@ -13,7 +13,7 @@ import {
   Settings2,
   ClipboardList,
   Wrench,
-  CalendarDays,
+  Menu as MenuIcon, // For potential future use if needed
 } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { Button } from '@/components/ui/button';
@@ -42,9 +42,10 @@ const allNavItems = [
 ];
 
 interface DashboardSidebarProps {
-  isOpen: boolean;
-  onToggle: () => void;
+  isOpen: boolean; // For desktop: true = expanded, false = collapsed. For mobile sheet: should always be true for content.
+  onToggle: () => void; // For desktop: toggles collapse. For mobile sheet: closes sheet.
   userRole: UserRole;
+  isMobileView: boolean; // To adapt rendering logic
 }
 
 interface UserProfile {
@@ -55,12 +56,18 @@ interface UserProfile {
 const DEFAULT_AVATAR_PLACEHOLDER = "https://placehold.co/40x40.png";
 const DEFAULT_USER_NAME = "User Name";
 
-export default function DashboardSidebar({ isOpen, onToggle, userRole }: DashboardSidebarProps) {
+export default function DashboardSidebar({ isOpen, onToggle, userRole, isMobileView }: DashboardSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
   const [userName, setUserName] = useState(DEFAULT_USER_NAME);
   const [userAvatarUrl, setUserAvatarUrl] = useState(DEFAULT_AVATAR_PLACEHOLDER);
+
+  // Determine if text labels should be shown.
+  // In mobile sheet, always show text (isOpen is true).
+  // On desktop, show text if isOpen is true.
+  const showText = isMobileView ? true : isOpen;
+
 
   const loadProfile = () => {
     if (typeof window !== 'undefined') {
@@ -86,7 +93,7 @@ export default function DashboardSidebar({ isOpen, onToggle, userRole }: Dashboa
     loadProfile(); 
 
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'userProfile' || event.key === 'userRole') { // Listen for role changes too
+      if (event.key === 'userProfile' || event.key === 'userRole') { 
         loadProfile();
       }
     };
@@ -117,25 +124,22 @@ export default function DashboardSidebar({ isOpen, onToggle, userRole }: Dashboa
   };
 
   const visibleNavItems = getVisibleNavItems();
-
-  return (
-    <aside className={cn(
-      "fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out",
-      isOpen ? "w-64" : "w-20"
-    )}>
+  
+  const sidebarContent = (
+    <>
       <div
         className={cn(
           "flex h-16 items-center border-b border-sidebar-border px-6 transition-colors hover:bg-sidebar-accent",
-          isOpen ? "justify-start" : "justify-center px-0", 
+          showText ? "justify-start" : "justify-center px-0", 
           "cursor-pointer"
         )}
-        onClick={onToggle}
+        onClick={onToggle} // This will toggle desktop collapse or close mobile sheet
         role="button"
         tabIndex={0}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onToggle(); }}
-        title={isOpen ? "Collapse sidebar" : "Expand sidebar"}
+        title={isMobileView ? "Close menu" : (isOpen ? "Collapse sidebar" : "Expand sidebar")}
       >
-        <Logo iconSize={6} textSize="text-xl" hideText={!isOpen} className="ml-0" />
+        <Logo iconSize={6} textSize="text-xl" hideText={!showText} className="ml-0" />
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-2">
         {visibleNavItems.map((item) => (
@@ -147,57 +151,78 @@ export default function DashboardSidebar({ isOpen, onToggle, userRole }: Dashboa
                 pathname.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard')
                 ? "bg-sidebar-accent text-sidebar-accent-foreground"
                 : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                !isOpen && "justify-center h-12 w-12 p-0" 
+                !showText && "justify-center h-12 w-12 p-0" 
               )}
-              title={item.label} 
+              title={item.label}
+              onClick={() => isMobileView && onToggle()} // Close sheet on item click
             >
-              <item.icon className={cn("mr-3 h-5 w-5", !isOpen && "mr-0")} />
-              {isOpen && item.label}
+              <item.icon className={cn("mr-3 h-5 w-5", !showText && "mr-0")} />
+              {showText && item.label}
             </Button>
           </Link>
         ))}
       </nav>
       <Separator className="bg-sidebar-border" />
-      <div className={cn("p-2", !isOpen && "p-1")}>
+      <div className={cn("p-2", !showText && "p-1")}>
          <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button 
               variant="ghost" 
               className={cn(
                 "w-full justify-start hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                !isOpen && "justify-center h-12 w-12 p-0"
+                !showText && "justify-center h-12 w-12 p-0"
               )}
               title="My Account"
             >
-              <Avatar className={cn("mr-3 h-8 w-8", !isOpen && "mr-0")}>
+              <Avatar className={cn("mr-3 h-8 w-8", !showText && "mr-0")}>
                 <AvatarImage src={userAvatarUrl} alt={userName} data-ai-hint="user profile"/>
                 <AvatarFallback>{userName ? userName.charAt(0).toUpperCase() : "U"}</AvatarFallback>
               </Avatar>
-              {isOpen && <span className="flex-1 text-left truncate">{userName}</span>}
-              {isOpen && <ChevronDown className="ml-auto h-4 w-4 shrink-0" />}
+              {showText && <span className="flex-1 text-left truncate">{userName}</span>}
+              {showText && <ChevronDown className="ml-auto h-4 w-4 shrink-0" />}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56 mb-1" side={isOpen ? "top" : "right"} align={isOpen ? "start" : "center"} sideOffset={isOpen ? 0 : 8}>
+          <DropdownMenuContent 
+            className="w-56 mb-1" 
+            side={isMobileView ? "top" : (isOpen ? "top" : "right")} // Adjust side for mobile sheet
+            align={isMobileView ? "center" : (isOpen ? "start" : "center")} // Adjust align for mobile sheet
+            sideOffset={isMobileView ? 4 : (isOpen ? 0 : 8)}
+          >
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
+            <DropdownMenuItem asChild onClick={() => isMobileView && onToggle()}>
               <Link href="/dashboard/profile">
                 <UserCircle2 className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => { alert('Settings page not implemented.'); if(isMobileView) onToggle();}}>
               <Settings2 className="mr-2 h-4 w-4" />
               <span>Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/30 focus:text-destructive-foreground">
+            <DropdownMenuItem onClick={() => {handleLogout(); if(isMobileView) onToggle();}} className="text-destructive focus:bg-destructive/30 focus:text-destructive-foreground">
               <LogOut className="mr-2 h-4 w-4" />
               <span>Log out</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+    </>
+  );
+
+  // For mobile view, the sidebar content is rendered inside a Sheet by the layout.
+  // For desktop view, it's rendered as a fixed aside.
+  if (isMobileView) {
+    return <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">{sidebarContent}</div>;
+  }
+
+  return (
+    <aside className={cn(
+      "fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out",
+      isOpen ? "w-64" : "w-20" // This is for desktop
+    )}>
+      {sidebarContent}
     </aside>
   );
 }

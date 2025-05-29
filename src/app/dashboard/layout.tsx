@@ -6,13 +6,16 @@ import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Menu as MenuIcon } from "lucide-react"; // Renamed to avoid conflict
 
 type UserRole = "operator" | "maintenance" | "warehouse" | null;
 
 const commonAllowedPaths = ["/dashboard/profile"];
 const operatorAllowedPathPrefixes = ["/dashboard/maintenance", "/dashboard/manuals", "/dashboard", ...commonAllowedPaths];
 const warehouseAllowedPathPrefixes = ["/dashboard/stock", "/dashboard", ...commonAllowedPaths];
-const maintenanceAllowedPathPrefixes = ["/dashboard"]; // Allows all under /dashboard
+const maintenanceAllowedPathPrefixes = ["/dashboard"]; 
 
 function isPathAllowed(path: string, role: UserRole): boolean {
   if (!role) return false;
@@ -29,17 +32,31 @@ function isPathAllowed(path: string, role: UserRole): boolean {
   return false;
 }
 
+const MOBILE_BREAKPOINT = 768; // md breakpoint
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
+
   const router = useRouter();
   const pathname = usePathname();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth < MOBILE_BREAKPOINT);
+    };
+    handleResize(); // Initial check
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -53,26 +70,24 @@ export default function DashboardLayout({
           if (isPathAllowed(pathname, role)) {
             setIsAuthorized(true);
           } else {
-            // Redirect to a default page for the role if current path is not allowed
             if (role === "operator") router.push("/dashboard/maintenance");
             else if (role === "warehouse") router.push("/dashboard/stock");
-            else router.push("/dashboard"); // Maintenance default
+            else router.push("/dashboard"); 
           }
         } else {
-          router.push("/role-selection"); // Logged in but no role
+          router.push("/role-selection"); 
         }
       } else {
-        router.push("/"); // Not logged in
+        router.push("/"); 
       }
       setIsLoading(false);
     }
-  }, [router, pathname]); // Add pathname to dependencies to re-check on path change
+  }, [router, pathname]); 
 
   useEffect(() => {
-    // This effect handles role changes or direct URL navigation after initial load
     if (!isLoading && typeof window !== 'undefined') {
         const currentRoleFromStorage = localStorage.getItem("userRole") as UserRole;
-        setUserRole(currentRoleFromStorage); // Ensure role state is up-to-date
+        setUserRole(currentRoleFromStorage); 
 
         const loggedInStatus = localStorage.getItem("equipCareUserLoggedIn");
 
@@ -91,7 +106,7 @@ export default function DashboardLayout({
         if (isPathAllowed(pathname, currentRoleFromStorage)) {
             setIsAuthorized(true);
         } else {
-            setIsAuthorized(false); // Important to set to false before redirecting
+            setIsAuthorized(false); 
             if (currentRoleFromStorage === "operator") router.push("/dashboard/maintenance");
             else if (currentRoleFromStorage === "warehouse") router.push("/dashboard/stock");
             else router.push("/dashboard");
@@ -106,15 +121,20 @@ export default function DashboardLayout({
     }
   }, [isAuthorized]);
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
+  const toggleDesktopSidebar = () => {
+    setIsDesktopSidebarOpen(!isDesktopSidebarOpen);
   };
+
+  const toggleMobileSidebar = () => {
+    setIsMobileSidebarOpen(!isMobileSidebarOpen);
+  }
 
   if (isLoading || !isAuthorized) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <div className="flex w-full h-full">
-          <Skeleton className={cn("h-full transition-all duration-300 ease-in-out", isSidebarOpen ? "w-64" : "w-20")} />
+          {/* Simplified skeleton for mobile vs desktop */}
+          <Skeleton className={cn("h-full transition-all duration-300 ease-in-out", isMobileView ? "w-0" : (isDesktopSidebarOpen ? "w-64" : "w-20"))} />
           <div className="flex-1 p-6 md:p-8 space-y-8">
             <div className="flex justify-between">
               <Skeleton className="h-10 w-1/2" />
@@ -135,12 +155,41 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-background">
-      <DashboardSidebar isOpen={isSidebarOpen} onToggle={toggleSidebar} userRole={userRole} />
+      {isMobileView ? (
+        <Sheet open={isMobileSidebarOpen} onOpenChange={setIsMobileSidebarOpen}>
+          {/* Trigger is now part of the main content area for mobile */}
+          <SheetContent side="left" className="p-0 w-[280px] flex flex-col">
+             {/* Pass isMobile=true and ensure sidebar always renders in "expanded" like state for sheet */}
+            <DashboardSidebar 
+              isOpen={true} // For sheet content, it's always visually expanded
+              onToggle={() => setIsMobileSidebarOpen(false)} // Logo click in sheet should close sheet
+              userRole={userRole}
+              isMobileView={true} // Indicate it's for mobile sheet
+            />
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <DashboardSidebar 
+            isOpen={isDesktopSidebarOpen} 
+            onToggle={toggleDesktopSidebar} 
+            userRole={userRole}
+            isMobileView={false}
+        />
+      )}
+      
       <main className={cn(
         "flex-1 transition-all duration-300 ease-in-out",
-        isSidebarOpen ? "pl-64" : "pl-20"
+        isMobileView ? "pl-0" : (isDesktopSidebarOpen ? "pl-64" : "pl-20")
         )}>
-        <div className="p-6 md:p-8">
+        {isMobileView && (
+          <div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-2 border-b">
+             <Button variant="ghost" size="icon" onClick={toggleMobileSidebar}>
+              <MenuIcon className="h-6 w-6" />
+              <span className="sr-only">Buka Menu</span>
+            </Button>
+          </div>
+        )}
+        <div className="p-4 md:p-6 lg:p-8"> {/* Adjusted padding for consistency */}
            {children}
         </div>
       </main>
