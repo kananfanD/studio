@@ -49,7 +49,7 @@ export default function StockItemCard({
 
   return (
     <Card className={cn("flex flex-col overflow-hidden shadow-lg transition-all hover:shadow-xl", isLowStock && "border-destructive")}>
-      <div className="relative h-48 w-full">
+      <div className="relative h-40 sm:h-48 w-full">
         <Image
           src={imageUrl || "https://placehold.co/600x400.png?text=Component"}
           alt={componentName}

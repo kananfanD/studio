@@ -67,7 +67,7 @@ export default function MaintenanceTaskCard({
 
   return (
     <Card className="flex flex-col overflow-hidden shadow-lg transition-all hover:shadow-xl">
-      <div className="relative h-48 w-full">
+      <div className="relative h-40 sm:h-48 w-full">
         <Image
           src={imageUrl || "https://placehold.co/600x400.png?text=Task+Image"}
           alt={taskName}

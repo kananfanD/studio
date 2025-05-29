@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
@@ -19,7 +20,7 @@ export default function StatCard({ title, value, icon: Icon, description, classN
         <Icon className={cn("h-5 w-5 text-muted-foreground", iconClassName)} />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold text-foreground">{value}</div>
+        <div className="text-xl font-bold text-foreground sm:text-2xl">{value}</div>
         {description && <p className="text-xs text-muted-foreground pt-1">{description}</p>}
       </CardContent>
     </Card>

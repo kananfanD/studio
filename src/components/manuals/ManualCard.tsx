@@ -46,7 +46,7 @@ export default function ManualCard({
 
   return (
     <Card className="flex flex-col overflow-hidden shadow-lg transition-all hover:shadow-xl">
-      <div className="relative h-64 w-full">
+      <div className="relative h-56 sm:h-64 w-full">
         <Image
           src={coverImageUrl || "https://placehold.co/600x400.png?text=Manual+Cover"}
           alt={manualTitle}

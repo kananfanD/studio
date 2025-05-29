@@ -28,21 +28,21 @@ export default function RoleSelectionPage() {
         <CardContent className="space-y-4">
           <Button
             variant="outline"
-            className="w-full h-16 text-lg justify-start p-4"
+            className="w-full h-14 text-base justify-start p-4"
             onClick={() => handleRoleSelect("operator", "/dashboard/maintenance")}
           >
             <Wrench className="mr-3 h-6 w-6 text-primary" /> Operator
           </Button>
           <Button
             variant="outline"
-            className="w-full h-16 text-lg justify-start p-4"
+            className="w-full h-14 text-base justify-start p-4"
             onClick={() => handleRoleSelect("maintenance", "/dashboard")}
           >
             <User className="mr-3 h-6 w-6 text-primary" /> Maintenance Staff
           </Button>
           <Button
             variant="outline"
-            className="w-full h-16 text-lg justify-start p-4"
+            className="w-full h-14 text-base justify-start p-4"
             onClick={() => handleRoleSelect("warehouse", "/dashboard/stock")}
           >
             <Warehouse className="mr-3 h-6 w-6 text-primary" /> Warehouse Staff
