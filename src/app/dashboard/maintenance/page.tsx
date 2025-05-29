@@ -186,7 +186,7 @@ export default function MaintenancePage() {
 
         {/* Daily Tasks Tab */}
         <TabsContent value="daily">
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-end mb-6">
             <Button asChild>
               <Link href="/dashboard/maintenance/daily/new">
                 <PlusCircle className="mr-2 h-4 w-4" /> Add New Daily Task
@@ -215,7 +215,7 @@ export default function MaintenancePage() {
 
         {/* Weekly Tasks Tab */}
         <TabsContent value="weekly">
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-end mb-6">
             <Button asChild>
               <Link href="/dashboard/maintenance/weekly/new">
                 <PlusCircle className="mr-2 h-4 w-4" /> Add New Weekly Task
@@ -244,7 +244,7 @@ export default function MaintenancePage() {
 
         {/* Monthly Tasks Tab */}
         <TabsContent value="monthly">
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-end mb-6">
             <Button asChild>
               <Link href="/dashboard/maintenance/monthly/new">
                 <PlusCircle className="mr-2 h-4 w-4" /> Add New Monthly Task
