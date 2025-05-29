@@ -20,8 +20,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { LogIn } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useToast } from "@/hooks/use-toast";
-// Image component is no longer needed for a solid color background
-// import Image from "next/image";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -56,9 +54,8 @@ export default function LoginForm() {
   }
 
   return (
-    // Changed background to dark blue and removed relative positioning for image
-    <div className="flex min-h-screen flex-col items-center justify-center bg-blue-900 p-4">
-      {/* Image and overlay div removed */}
+    // Changed background to light sky blue
+    <div className="flex min-h-screen flex-col items-center justify-center bg-sky-200 p-4">
       <Card className="w-full max-w-md shadow-xl z-20 bg-card"> {/* Ensure card has its own background */}
         <CardHeader className="items-center text-center">
           <Logo className="mb-4" iconSize={10} textSize="text-3xl" />
