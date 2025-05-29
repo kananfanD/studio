@@ -71,6 +71,22 @@ export default function MaintenancePage() {
   const [hasInitializedMonthly, setHasInitializedMonthly] = useState(false);
   
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("daily");
+
+  const getButtonProps = () => {
+    switch (activeTab) {
+      case "daily":
+        return { href: "/dashboard/maintenance/daily/new", text: "Add New Daily Task" };
+      case "weekly":
+        return { href: "/dashboard/maintenance/weekly/new", text: "Add New Weekly Task" };
+      case "monthly":
+        return { href: "/dashboard/maintenance/monthly/new", text: "Add New Monthly Task" };
+      default:
+        return { href: "/dashboard/maintenance/daily/new", text: "Add New Daily Task" };
+    }
+  };
+
+  const buttonProps = getButtonProps();
 
   // Load Daily Tasks
   useEffect(() => {
@@ -176,8 +192,14 @@ export default function MaintenancePage() {
       <PageHeader
         title="Maintenance Tasks"
         description="Manage all scheduled maintenance activities: Daily, Weekly, and Monthly."
-      />
-      <Tabs defaultValue="daily" className="w-full">
+      >
+        <Button asChild className="w-full sm:w-auto">
+          <Link href={buttonProps.href}>
+            <PlusCircle className="mr-2 h-4 w-4" /> {buttonProps.text}
+          </Link>
+        </Button>
+      </PageHeader>
+      <Tabs defaultValue="daily" className="w-full" onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-1 gap-1 sm:grid-cols-3 sm:gap-0 mb-6">
           <TabsTrigger value="daily">Daily Tasks</TabsTrigger>
           <TabsTrigger value="weekly">Weekly Tasks</TabsTrigger>
@@ -186,13 +208,6 @@ export default function MaintenancePage() {
 
         {/* Daily Tasks Tab */}
         <TabsContent value="daily">
-          <div className="mb-6">
-            <Button asChild>
-              <Link href="/dashboard/maintenance/daily/new">
-                <PlusCircle className="mr-2 h-4 w-4" /> Add New Daily Task
-              </Link>
-            </Button>
-          </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {dailyTasks.map(task => (
               <MaintenanceTaskCard
@@ -215,13 +230,6 @@ export default function MaintenancePage() {
 
         {/* Weekly Tasks Tab */}
         <TabsContent value="weekly">
-          <div className="mb-6">
-            <Button asChild>
-              <Link href="/dashboard/maintenance/weekly/new">
-                <PlusCircle className="mr-2 h-4 w-4" /> Add New Weekly Task
-              </Link>
-            </Button>
-          </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {weeklyTasks.map(task => (
               <MaintenanceTaskCard
@@ -244,13 +252,6 @@ export default function MaintenancePage() {
 
         {/* Monthly Tasks Tab */}
         <TabsContent value="monthly">
-          <div className="mb-6">
-            <Button asChild>
-              <Link href="/dashboard/maintenance/monthly/new">
-                <PlusCircle className="mr-2 h-4 w-4" /> Add New Monthly Task
-              </Link>
-            </Button>
-          </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {monthlyTasks.map(task => (
               <MaintenanceTaskCard
