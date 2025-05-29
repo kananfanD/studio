@@ -14,9 +14,6 @@ import {
   ClipboardList,
   Wrench, 
   Menu as MenuIcon,
-  // Sunrise, // No longer individual
-  // CalendarDays, // No longer individual
-  // CalendarRange // No longer individual
 } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { Button } from '@/components/ui/button';
@@ -39,9 +36,6 @@ type UserRole = "operator" | "maintenance" | "warehouse" | null;
 const allNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['operator', 'maintenance', 'warehouse'] },
   { href: '/dashboard/maintenance', label: 'Maintenance Tasks', icon: Wrench, roles: ['operator', 'maintenance'] },
-  // { href: '/dashboard/maintenance/daily', label: 'Daily Maintenance', icon: Sunrise, roles: ['operator', 'maintenance'] }, // Removed
-  // { href: '/dashboard/maintenance/weekly', label: 'Weekly Maintenance', icon: CalendarDays, roles: ['operator', 'maintenance'] }, // Removed
-  // { href: '/dashboard/maintenance/monthly', label: 'Monthly Maintenance', icon: CalendarRange, roles: ['operator', 'maintenance'] }, // Removed
   { href: '/dashboard/inventory', label: 'Maintenance Log', icon: ClipboardList, roles: ['maintenance'] },
   { href: '/dashboard/stock', label: 'Component Stock', icon: Archive, roles: ['warehouse', 'maintenance'] },
   { href: '/dashboard/manuals', label: 'Manuals', icon: BookOpenText, roles: ['operator', 'maintenance'] },
@@ -199,9 +193,11 @@ export default function DashboardSidebar({ isOpen, onToggle, userRole, isMobileV
                 <span>Profile</span>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => { alert('Settings page not implemented.'); if(isMobileView) onToggle();}}>
-              <Settings2 className="mr-2 h-4 w-4" />
-              <span>Settings</span>
+            <DropdownMenuItem asChild onClick={() => isMobileView && onToggle()}>
+              <Link href="/dashboard/settings">
+                <Settings2 className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => {handleLogout(); if(isMobileView) onToggle();}} className="text-destructive focus:bg-destructive/30 focus:text-destructive-foreground">
