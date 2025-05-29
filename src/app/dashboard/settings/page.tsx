@@ -7,14 +7,25 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Moon, Sun, Trash2, UserCircle2, Bell } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Moon, Sun, Trash2, UserCircle2, Bell, Languages, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+
+type SupportedLanguage = "en" | "id" | "ja" | "ko" | "zh-TW";
+
+const languageMap: Record<SupportedLanguage, string> = {
+  "en": "English",
+  "id": "Indonesian",
+  "ja": "Japanese",
+  "ko": "Korean",
+  "zh-TW": "Taiwanese",
+};
 
 export default function SettingsPage() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>("en");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -32,6 +43,11 @@ export default function SettingsPage() {
       setNotificationsEnabled(true);
     } else {
       setNotificationsEnabled(false);
+    }
+
+    const savedLanguage = localStorage.getItem("userLanguage") as SupportedLanguage | null;
+    if (savedLanguage && languageMap[savedLanguage]) {
+      setSelectedLanguage(savedLanguage);
     }
   }, []);
 
@@ -79,6 +95,17 @@ export default function SettingsPage() {
     });
   };
 
+  const handleLanguageChange = (value: string) => {
+    const newLang = value as SupportedLanguage;
+    setSelectedLanguage(newLang);
+    localStorage.setItem("userLanguage", newLang);
+    toast({
+      title: "Language Changed",
+      description: `Language set to ${languageMap[newLang]}. (UI translation not yet implemented)`,
+    });
+    // Note: Actual UI translation would require a more complex i18n setup.
+    // This currently only saves the preference.
+  };
 
   return (
     <>
@@ -169,6 +196,36 @@ export default function SettingsPage() {
             </div>
              <p className="text-sm text-muted-foreground">
               (This is a placeholder setting for the prototype and does not send actual notifications).
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle>Language</CardTitle>
+            <CardDescription>Select your preferred language for the application.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between space-x-2 p-4 border rounded-lg">
+                <Label htmlFor="language-select" className="flex items-center space-x-2">
+                  <Languages className="h-5 w-5 text-muted-foreground" />
+                  <span>Application Language</span>
+                </Label>
+                <Select value={selectedLanguage} onValueChange={handleLanguageChange}>
+                  <SelectTrigger id="language-select" className="w-[180px]">
+                    <SelectValue placeholder="Select language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(languageMap) as SupportedLanguage[]).map((langKey) => (
+                      <SelectItem key={langKey} value={langKey}>
+                        {languageMap[langKey]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Note: Language selection is a placeholder. Actual UI translation is not yet implemented in this prototype.
             </p>
           </CardContent>
         </Card>
