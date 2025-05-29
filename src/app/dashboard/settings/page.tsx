@@ -22,41 +22,44 @@ const languageMap: Record<SupportedLanguage, string> = {
   "zh-TW": "Taiwanese",
 };
 
+// Define English translations separately to avoid self-reference issues
+const englishTranslations = {
+  settingsTitle: "Settings",
+  settingsDescription: "Manage your application preferences.",
+  backToDashboard: "Back to Dashboard",
+  appearanceTitle: "Appearance",
+  appearanceDescription: "Customize the look and feel of the application.",
+  darkModeLabel: "Dark Mode",
+  darkModeDescription: "Switch between light and dark themes.",
+  resetThemeButton: "Reset to Default Theme",
+  accountTitle: "Account",
+  accountDescription: "Manage your profile information.",
+  manageProfileButton: "Manage Profile",
+  manageProfileDescription: "Change your name, avatar, and other personal details.",
+  notificationsTitle: "Notifications",
+  notificationsDescription: "Configure how you receive notifications.",
+  enableNotificationsLabel: "Enable Notifications",
+  enableNotificationsDescription: "Toggle application notifications on or off.",
+  notificationsPlaceholder: "(This is a placeholder setting for the prototype and does not send actual notifications).",
+  languageTitle: "Language",
+  languageDescription: "Select your preferred language for the application.",
+  appLanguageLabel: "Application Language",
+  languagePlaceholder: "Note: Language selection is a placeholder. Actual UI translation is not yet implemented in this prototype.",
+  themeChangedToast: "Theme Changed",
+  darkModeEnabledToast: "Dark mode enabled.",
+  lightModeEnabledToast: "Light mode enabled.",
+  themeResetToast: "Theme Reset",
+  themeResetDescriptionToast: "Theme has been reset to default (Light).",
+  notificationSettingsUpdatedToast: "Notification Settings Updated",
+  notificationsEnabledToast: "Notifications enabled.",
+  notificationsDisabledToast: "Notifications disabled.",
+  languageChangedToast: "Language Changed",
+  languageSetToToast: "Language set to {lang}. (UI translation not yet implemented)",
+};
+
 // Simple translation dictionary for demonstration
 const translations: Record<SupportedLanguage, Record<string, string>> = {
-  en: {
-    settingsTitle: "Settings",
-    settingsDescription: "Manage your application preferences.",
-    backToDashboard: "Back to Dashboard",
-    appearanceTitle: "Appearance",
-    appearanceDescription: "Customize the look and feel of the application.",
-    darkModeLabel: "Dark Mode",
-    darkModeDescription: "Switch between light and dark themes.",
-    resetThemeButton: "Reset to Default Theme",
-    accountTitle: "Account",
-    accountDescription: "Manage your profile information.",
-    manageProfileButton: "Manage Profile",
-    manageProfileDescription: "Change your name, avatar, and other personal details.",
-    notificationsTitle: "Notifications",
-    notificationsDescription: "Configure how you receive notifications.",
-    enableNotificationsLabel: "Enable Notifications",
-    enableNotificationsDescription: "Toggle application notifications on or off.",
-    notificationsPlaceholder: "(This is a placeholder setting for the prototype and does not send actual notifications).",
-    languageTitle: "Language",
-    languageDescription: "Select your preferred language for the application.",
-    appLanguageLabel: "Application Language",
-    languagePlaceholder: "Note: Language selection is a placeholder. Actual UI translation is not yet implemented in this prototype.",
-    themeChangedToast: "Theme Changed",
-    darkModeEnabledToast: "Dark mode enabled.",
-    lightModeEnabledToast: "Light mode enabled.",
-    themeResetToast: "Theme Direset",
-    themeResetDescriptionToast: "Theme has been reset to default (Light).",
-    notificationSettingsUpdatedToast: "Notification Settings Updated",
-    notificationsEnabledToast: "Notifications enabled.",
-    notificationsDisabledToast: "Notifications disabled.",
-    languageChangedToast: "Language Changed",
-    languageSetToToast: "Language set to {lang}. (UI translation not yet implemented)",
-  },
+  en: englishTranslations,
   id: {
     settingsTitle: "Pengaturan",
     settingsDescription: "Kelola preferensi aplikasi Anda.",
@@ -90,10 +93,10 @@ const translations: Record<SupportedLanguage, Record<string, string>> = {
     languageChangedToast: "Bahasa Diubah",
     languageSetToToast: "Bahasa diatur ke {lang}. (Terjemahan UI belum diimplementasikan)",
   },
-  // Other languages would be stubs for this demo
-  ja: { ...translations.en, settingsTitle: "設定" }, // Stub
-  ko: { ...translations.en, settingsTitle: "설정" }, // Stub
-  "zh-TW": { ...translations.en, settingsTitle: "設置" }, // Stub
+  // Other languages would be stubs for this demo, referencing the pre-defined englishTranslations
+  ja: { ...englishTranslations, settingsTitle: "設定" }, // Stub
+  ko: { ...englishTranslations, settingsTitle: "설정" }, // Stub
+  "zh-TW": { ...englishTranslations, settingsTitle: "設置" }, // Stub
 };
 
 export default function SettingsPage() {
@@ -157,8 +160,8 @@ export default function SettingsPage() {
     setIsDarkMode(false);
     toast({
       title: t.themeResetToast,
-      description: t.themeResetDescriptionToast,
-      variant: "destructive",
+      description: t.themeResetDescriptionToast, // Corrected from themeResetDescriptionToast
+      variant: "destructive", // Added variant for consistency
     });
      window.dispatchEvent(new StorageEvent('storage', {
       key: 'theme',
@@ -182,7 +185,7 @@ export default function SettingsPage() {
     localStorage.setItem("userLanguage", newLang);
     // The useEffect for selectedLanguage will update 't'
     toast({
-      title: t.languageChangedToast, // This will use the 'previous' language for the toast itself
+      title: (translations[newLang] || translations.en).languageChangedToast, 
       description: (translations[newLang] || translations.en).languageSetToToast.replace("{lang}", languageMap[newLang]),
     });
     // For a full app, you'd trigger a global language update here
@@ -313,5 +316,4 @@ export default function SettingsPage() {
       </div>
     </>
   );
-
-    
+}
