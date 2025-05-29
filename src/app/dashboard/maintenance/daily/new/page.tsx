@@ -156,7 +156,7 @@ export default function NewDailyTaskPage() {
         if (taskIndexInLog !== -1) {
             allTasksLog[taskIndexInLog] = taskForLog;
         } else {
-            allTasksLog.push(taskForLog); // Add if not found (should ideally be there)
+            allTasksLog.push(taskForLog); 
         }
     } else {
         allTasksLog.push(taskForLog);
@@ -164,7 +164,7 @@ export default function NewDailyTaskPage() {
     localStorage.setItem("allMaintenanceTasksLog", JSON.stringify(allTasksLog));
     window.dispatchEvent(new StorageEvent('storage', { key: 'allMaintenanceTasksLog', newValue: JSON.stringify(allTasksLog), storageArea: localStorage }));
 
-    router.push("/dashboard/maintenance");
+    router.push("/dashboard/maintenance/daily");
   }
 
   return (
@@ -174,9 +174,9 @@ export default function NewDailyTaskPage() {
         description={isEditMode ? "Update the details of the daily maintenance task." : "Fill in the details for the new daily maintenance task."}
       >
         <Button variant="outline" asChild>
-          <Link href="/dashboard/maintenance">
+          <Link href="/dashboard/maintenance/daily">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Maintenance Tasks
+            Back to Daily Tasks
           </Link>
         </Button>
       </PageHeader>
@@ -340,7 +340,7 @@ export default function NewDailyTaskPage() {
                 </div>
               )}
               <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => router.push('/dashboard/maintenance')}>
+                <Button type="button" variant="outline" onClick={() => router.push('/dashboard/maintenance/daily')}>
                   Cancel
                 </Button>
                 <Button type="submit">

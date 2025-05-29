@@ -12,8 +12,11 @@ import {
   ChevronDown,
   Settings2,
   ClipboardList,
-  Wrench,
-  Menu as MenuIcon, // For potential future use if needed
+  // Wrench, // No longer used for a general maintenance link
+  Menu as MenuIcon,
+  Sunrise, // For Daily Maintenance
+  CalendarDays, // For Weekly Maintenance
+  CalendarRange // For Monthly Maintenance
 } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { Button } from '@/components/ui/button';
@@ -35,17 +38,20 @@ type UserRole = "operator" | "maintenance" | "warehouse" | null;
 
 const allNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['operator', 'maintenance', 'warehouse'] },
-  { href: '/dashboard/maintenance', label: 'Maintenance Tasks', icon: Wrench, roles: ['operator', 'maintenance'] },
+  // { href: '/dashboard/maintenance', label: 'Maintenance Tasks', icon: Wrench, roles: ['operator', 'maintenance'] }, // Removed
+  { href: '/dashboard/maintenance/daily', label: 'Daily Maintenance', icon: Sunrise, roles: ['operator', 'maintenance'] },
+  { href: '/dashboard/maintenance/weekly', label: 'Weekly Maintenance', icon: CalendarDays, roles: ['operator', 'maintenance'] },
+  { href: '/dashboard/maintenance/monthly', label: 'Monthly Maintenance', icon: CalendarRange, roles: ['operator', 'maintenance'] },
   { href: '/dashboard/inventory', label: 'Maintenance Log', icon: ClipboardList, roles: ['maintenance'] },
   { href: '/dashboard/stock', label: 'Component Stock', icon: Archive, roles: ['warehouse', 'maintenance'] },
   { href: '/dashboard/manuals', label: 'Manuals', icon: BookOpenText, roles: ['operator', 'maintenance'] },
 ];
 
 interface DashboardSidebarProps {
-  isOpen: boolean; // For desktop: true = expanded, false = collapsed. For mobile sheet: should always be true for content.
-  onToggle: () => void; // For desktop: toggles collapse. For mobile sheet: closes sheet.
+  isOpen: boolean; 
+  onToggle: () => void; 
   userRole: UserRole;
-  isMobileView: boolean; // To adapt rendering logic
+  isMobileView: boolean; 
 }
 
 interface UserProfile {
@@ -63,9 +69,6 @@ export default function DashboardSidebar({ isOpen, onToggle, userRole, isMobileV
   const [userName, setUserName] = useState(DEFAULT_USER_NAME);
   const [userAvatarUrl, setUserAvatarUrl] = useState(DEFAULT_AVATAR_PLACEHOLDER);
 
-  // Determine if text labels should be shown.
-  // In mobile sheet, always show text (isOpen is true).
-  // On desktop, show text if isOpen is true.
   const showText = isMobileView ? true : isOpen;
 
 
@@ -133,7 +136,7 @@ export default function DashboardSidebar({ isOpen, onToggle, userRole, isMobileV
           showText ? "justify-start" : "justify-center px-0", 
           "cursor-pointer"
         )}
-        onClick={onToggle} // This will toggle desktop collapse or close mobile sheet
+        onClick={onToggle}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onToggle(); }}
@@ -154,7 +157,7 @@ export default function DashboardSidebar({ isOpen, onToggle, userRole, isMobileV
                 !showText && "justify-center h-12 w-12 p-0" 
               )}
               title={item.label}
-              onClick={() => isMobileView && onToggle()} // Close sheet on item click
+              onClick={() => isMobileView && onToggle()} 
             >
               <item.icon className={cn("mr-3 h-5 w-5", !showText && "mr-0")} />
               {showText && item.label}
@@ -184,8 +187,8 @@ export default function DashboardSidebar({ isOpen, onToggle, userRole, isMobileV
           </DropdownMenuTrigger>
           <DropdownMenuContent 
             className="w-56 mb-1" 
-            side={isMobileView ? "top" : (isOpen ? "top" : "right")} // Adjust side for mobile sheet
-            align={isMobileView ? "center" : (isOpen ? "start" : "center")} // Adjust align for mobile sheet
+            side={isMobileView ? "top" : (isOpen ? "top" : "right")} 
+            align={isMobileView ? "center" : (isOpen ? "start" : "center")} 
             sideOffset={isMobileView ? 4 : (isOpen ? 0 : 8)}
           >
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
@@ -211,8 +214,6 @@ export default function DashboardSidebar({ isOpen, onToggle, userRole, isMobileV
     </>
   );
 
-  // For mobile view, the sidebar content is rendered inside a Sheet by the layout.
-  // For desktop view, it's rendered as a fixed aside.
   if (isMobileView) {
     return <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">{sidebarContent}</div>;
   }
@@ -220,7 +221,7 @@ export default function DashboardSidebar({ isOpen, onToggle, userRole, isMobileV
   return (
     <aside className={cn(
       "fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out",
-      isOpen ? "w-64" : "w-20" // This is for desktop
+      isOpen ? "w-64" : "w-20" 
     )}>
       {sidebarContent}
     </aside>

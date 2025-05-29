@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
 import MaintenanceTaskCard, { type TaskStatus } from "@/components/maintenance/MaintenanceTaskCard";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, ListChecks } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 
@@ -40,9 +40,11 @@ export default function DailyMaintenancePage() {
         setDailyTasks(JSON.parse(storedTasks));
       } catch (e) {
         console.error("Failed to parse dailyTasks from localStorage", e);
-        setDailyTasks(initialDailyTasks); // Fallback to initial if parse fails
+        localStorage.setItem("dailyTasks", JSON.stringify(initialDailyTasks)); // Reset if corrupted
+        setDailyTasks(initialDailyTasks); 
       }
     } else {
+      localStorage.setItem("dailyTasks", JSON.stringify(initialDailyTasks));
       setDailyTasks(initialDailyTasks);
     }
     setHasInitialized(true);
@@ -64,6 +66,22 @@ export default function DailyMaintenancePage() {
     });
   };
 
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'dailyTasks' && event.newValue) {
+        try { 
+          setDailyTasks(JSON.parse(event.newValue)); 
+        } catch(e) { 
+          console.error("Failed to parse dailyTasks from storage event", e);
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
   return (
     <>
       <PageHeader 
@@ -83,15 +101,15 @@ export default function DailyMaintenancePage() {
             {...task} 
             onDelete={() => handleDeleteTask(task.id)}
             editPath="/dashboard/maintenance/daily/new" 
-            // Ensure imageUrl is passed, default in card if undefined/empty
             imageUrl={task.imageUrl || "https://placehold.co/600x400.png"}
-            // dataAihint can be added to DailyTask interface and form if needed
           />
         ))}
       </div>
-      {dailyTasks.length === 0 && (
+      {hasInitialized && dailyTasks.length === 0 && (
         <div className="col-span-full text-center py-10 text-muted-foreground">
-          <p>No daily tasks found. Add a new task to get started.</p>
+          <ListChecks className="mx-auto h-12 w-12" />
+          <p className="mt-2">No daily tasks found.</p>
+          <p className="text-sm">Add a new daily task to get started.</p>
         </div>
       )}
     </>

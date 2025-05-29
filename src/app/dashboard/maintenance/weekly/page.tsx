@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
 import MaintenanceTaskCard, { type TaskStatus } from "@/components/maintenance/MaintenanceTaskCard";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, ListChecks } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 
@@ -39,9 +39,11 @@ export default function WeeklyMaintenancePage() {
         setWeeklyTasks(JSON.parse(storedTasks));
       } catch (e) {
         console.error("Failed to parse weeklyTasks from localStorage", e);
+        localStorage.setItem("weeklyTasks", JSON.stringify(initialWeeklyTasks)); // Reset if corrupted
         setWeeklyTasks(initialWeeklyTasks); 
       }
     } else {
+      localStorage.setItem("weeklyTasks", JSON.stringify(initialWeeklyTasks));
       setWeeklyTasks(initialWeeklyTasks);
     }
     setHasInitialized(true);
@@ -61,6 +63,22 @@ export default function WeeklyMaintenancePage() {
       variant: "destructive",
     });
   };
+
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'weeklyTasks' && event.newValue) {
+        try { 
+          setWeeklyTasks(JSON.parse(event.newValue)); 
+        } catch(e) { 
+          console.error("Failed to parse weeklyTasks from storage event", e);
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   return (
     <>
@@ -85,9 +103,11 @@ export default function WeeklyMaintenancePage() {
           />
         ))}
       </div>
-      {weeklyTasks.length === 0 && (
+      {hasInitialized && weeklyTasks.length === 0 && (
         <div className="col-span-full text-center py-10 text-muted-foreground">
-          <p>No weekly tasks found. Add a new task to get started.</p>
+          <ListChecks className="mx-auto h-12 w-12" />
+          <p className="mt-2">No weekly tasks found.</p>
+          <p className="text-sm">Add a new weekly task to get started.</p>
         </div>
       )}
     </>

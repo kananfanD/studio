@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
 import MaintenanceTaskCard, { type TaskStatus } from "@/components/maintenance/MaintenanceTaskCard";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, ListChecks } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 
@@ -39,9 +39,11 @@ export default function MonthlyMaintenancePage() {
         setMonthlyTasks(JSON.parse(storedTasks));
       } catch (e) {
         console.error("Failed to parse monthlyTasks from localStorage", e);
+        localStorage.setItem("monthlyTasks", JSON.stringify(initialMonthlyTasks)); // Reset if corrupted
         setMonthlyTasks(initialMonthlyTasks);
       }
     } else {
+      localStorage.setItem("monthlyTasks", JSON.stringify(initialMonthlyTasks));
       setMonthlyTasks(initialMonthlyTasks);
     }
     setHasInitialized(true);
@@ -61,6 +63,22 @@ export default function MonthlyMaintenancePage() {
       variant: "destructive",
     });
   };
+
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'monthlyTasks' && event.newValue) {
+        try { 
+          setMonthlyTasks(JSON.parse(event.newValue)); 
+        } catch(e) { 
+          console.error("Failed to parse monthlyTasks from storage event", e);
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   return (
     <>
@@ -85,9 +103,11 @@ export default function MonthlyMaintenancePage() {
           />
         ))}
       </div>
-      {monthlyTasks.length === 0 && (
+      {hasInitialized && monthlyTasks.length === 0 && (
         <div className="col-span-full text-center py-10 text-muted-foreground">
-          <p>No monthly tasks found. Add a new task to get started.</p>
+          <ListChecks className="mx-auto h-12 w-12" />
+          <p className="mt-2">No monthly tasks found.</p>
+          <p className="text-sm">Add a new monthly task to get started.</p>
         </div>
       )}
     </>

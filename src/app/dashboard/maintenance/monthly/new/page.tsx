@@ -163,7 +163,7 @@ export default function NewMonthlyTaskPage() {
     localStorage.setItem("allMaintenanceTasksLog", JSON.stringify(allTasksLog));
     window.dispatchEvent(new StorageEvent('storage', { key: 'allMaintenanceTasksLog', newValue: JSON.stringify(allTasksLog), storageArea: localStorage }));
     
-    router.push("/dashboard/maintenance");
+    router.push("/dashboard/maintenance/monthly");
   }
 
   return (
@@ -173,9 +173,9 @@ export default function NewMonthlyTaskPage() {
         description={isEditMode ? "Update the details of the monthly maintenance task." : "Fill in the details for the new monthly maintenance task."}
       >
         <Button variant="outline" asChild>
-          <Link href="/dashboard/maintenance">
+          <Link href="/dashboard/maintenance/monthly">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Maintenance Tasks
+            Back to Monthly Tasks
           </Link>
         </Button>
       </PageHeader>
@@ -339,7 +339,7 @@ export default function NewMonthlyTaskPage() {
                 </div>
               )}
               <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => router.push('/dashboard/maintenance')}>
+                <Button type="button" variant="outline" onClick={() => router.push('/dashboard/maintenance/monthly')}>
                   Cancel
                 </Button>
                 <Button type="submit">
