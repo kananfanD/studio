@@ -178,7 +178,7 @@ export default function MaintenancePage() {
         description="Manage all scheduled maintenance activities: Daily, Weekly, and Monthly."
       />
       <Tabs defaultValue="daily" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
+        <TabsList className="grid w-full grid-cols-1 gap-1 sm:grid-cols-3 sm:gap-0 mb-6">
           <TabsTrigger value="daily">Daily Tasks</TabsTrigger>
           <TabsTrigger value="weekly">Weekly Tasks</TabsTrigger>
           <TabsTrigger value="monthly">Monthly Tasks</TabsTrigger>
