@@ -12,11 +12,11 @@ import {
   ChevronDown,
   Settings2,
   ClipboardList,
-  // Wrench, // No longer used for a general maintenance link
+  Wrench, 
   Menu as MenuIcon,
-  Sunrise, // For Daily Maintenance
-  CalendarDays, // For Weekly Maintenance
-  CalendarRange // For Monthly Maintenance
+  // Sunrise, // No longer individual
+  // CalendarDays, // No longer individual
+  // CalendarRange // No longer individual
 } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { Button } from '@/components/ui/button';
@@ -38,10 +38,10 @@ type UserRole = "operator" | "maintenance" | "warehouse" | null;
 
 const allNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['operator', 'maintenance', 'warehouse'] },
-  // { href: '/dashboard/maintenance', label: 'Maintenance Tasks', icon: Wrench, roles: ['operator', 'maintenance'] }, // Removed
-  { href: '/dashboard/maintenance/daily', label: 'Daily Maintenance', icon: Sunrise, roles: ['operator', 'maintenance'] },
-  { href: '/dashboard/maintenance/weekly', label: 'Weekly Maintenance', icon: CalendarDays, roles: ['operator', 'maintenance'] },
-  { href: '/dashboard/maintenance/monthly', label: 'Monthly Maintenance', icon: CalendarRange, roles: ['operator', 'maintenance'] },
+  { href: '/dashboard/maintenance', label: 'Maintenance Tasks', icon: Wrench, roles: ['operator', 'maintenance'] },
+  // { href: '/dashboard/maintenance/daily', label: 'Daily Maintenance', icon: Sunrise, roles: ['operator', 'maintenance'] }, // Removed
+  // { href: '/dashboard/maintenance/weekly', label: 'Weekly Maintenance', icon: CalendarDays, roles: ['operator', 'maintenance'] }, // Removed
+  // { href: '/dashboard/maintenance/monthly', label: 'Monthly Maintenance', icon: CalendarRange, roles: ['operator', 'maintenance'] }, // Removed
   { href: '/dashboard/inventory', label: 'Maintenance Log', icon: ClipboardList, roles: ['maintenance'] },
   { href: '/dashboard/stock', label: 'Component Stock', icon: Archive, roles: ['warehouse', 'maintenance'] },
   { href: '/dashboard/manuals', label: 'Manuals', icon: BookOpenText, roles: ['operator', 'maintenance'] },

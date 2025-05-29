@@ -16,14 +16,14 @@ import {
   CheckCircle2, 
   BookOpenText,
   ClipboardList,
-  Sunrise,
-  CalendarDays,
-  CalendarRange
+  // Sunrise, // No longer needed for quick action
+  // CalendarDays, // No longer needed for quick action
+  // CalendarRange // No longer needed for quick action
 } from "lucide-react";
 import Link from "next/link";
-import type { DailyTask } from "./maintenance/daily/page"; 
-import type { WeeklyTask } from "./maintenance/weekly/page"; 
-import type { MonthlyTask } from "./maintenance/monthly/page"; 
+import type { DailyTask } from "./maintenance/page"; // Updated import path
+import type { WeeklyTask } from "./maintenance/page"; // Updated import path
+import type { MonthlyTask } from "./maintenance/page"; // Updated import path
 import type { StockItem } from "./stock/page";
 import type { TaskStatus } from "@/components/maintenance/MaintenanceTaskCard";
 
@@ -51,8 +51,8 @@ export default function DashboardPage() {
     const dailyTasksString = localStorage.getItem("dailyTasks");
     if (dailyTasksString) {
       try {
-        const dailyTasks: DailyTask[] = JSON.parse(dailyTasksString);
-        const pending = dailyTasks.filter(task => task.status === "Pending" || task.status === "In Progress" || task.status === "Overdue").length;
+        const dailyTasksData: DailyTask[] = JSON.parse(dailyTasksString);
+        const pending = dailyTasksData.filter(task => task.status === "Pending" || task.status === "In Progress" || task.status === "Overdue").length;
         setPendingDailyTasks(pending);
       } catch (e) {
         console.error("Failed to parse dailyTasks for dashboard stats", e);
@@ -73,8 +73,8 @@ export default function DashboardPage() {
     const weeklyTasksString = localStorage.getItem("weeklyTasks");
     if (weeklyTasksString) {
       try {
-        const weeklyTasks: WeeklyTask[] = JSON.parse(weeklyTasksString);
-        const completed = weeklyTasks.filter(task => task.status === "Completed").length;
+        const weeklyTasksData: WeeklyTask[] = JSON.parse(weeklyTasksString);
+        const completed = weeklyTasksData.filter(task => task.status === "Completed").length;
         setCompletedWeeklyTasks(completed);
       } catch (e) {
         console.error("Failed to parse weeklyTasks for dashboard stats", e);
@@ -156,30 +156,12 @@ export default function DashboardPage() {
       <section className="mt-10">
         <h2 className="mb-4 text-2xl font-semibold text-foreground">Quick Actions</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Link href="/dashboard/maintenance/daily" className="block">
+          <Link href="/dashboard/maintenance" className="block">
             <Card className="hover:bg-accent/50 transition-colors p-6 flex items-center gap-4 shadow-md">
-              <Sunrise className="h-8 w-8 text-primary" />
+              <Wrench className="h-8 w-8 text-primary" />
               <div>
-                <h3 className="font-semibold text-lg text-foreground">Daily Maintenance</h3>
-                <p className="text-sm text-muted-foreground">View daily tasks</p>
-              </div>
-            </Card>
-          </Link>
-           <Link href="/dashboard/maintenance/weekly" className="block">
-            <Card className="hover:bg-accent/50 transition-colors p-6 flex items-center gap-4 shadow-md">
-              <CalendarDays className="h-8 w-8 text-primary" />
-              <div>
-                <h3 className="font-semibold text-lg text-foreground">Weekly Maintenance</h3>
-                <p className="text-sm text-muted-foreground">View weekly tasks</p>
-              </div>
-            </Card>
-          </Link>
-           <Link href="/dashboard/maintenance/monthly" className="block">
-            <Card className="hover:bg-accent/50 transition-colors p-6 flex items-center gap-4 shadow-md">
-              <CalendarRange className="h-8 w-8 text-primary" />
-              <div>
-                <h3 className="font-semibold text-lg text-foreground">Monthly Maintenance</h3>
-                <p className="text-sm text-muted-foreground">View monthly tasks</p>
+                <h3 className="font-semibold text-lg text-foreground">Maintenance Tasks</h3>
+                <p className="text-sm text-muted-foreground">View all maintenance tasks</p>
               </div>
             </Card>
           </Link>
