@@ -20,7 +20,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { LogIn } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useToast } from "@/hooks/use-toast";
-import Image from "next/image";
+// Image component is no longer needed for a solid color background
+// import Image from "next/image";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -55,21 +56,14 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center p-4">
-      <Image
-        src="https://placehold.co/1920x1080.png" 
-        alt="Industrial Background"
-        layout="fill"
-        objectFit="cover"
-        className="absolute inset-0 z-0"
-        data-ai-hint="industrial background" 
-      />
-      <div className="absolute inset-0 bg-black/50 z-10"></div> 
-      <Card className="w-full max-w-md shadow-xl z-20">
+    // Changed background to dark blue and removed relative positioning for image
+    <div className="flex min-h-screen flex-col items-center justify-center bg-blue-900 p-4">
+      {/* Image and overlay div removed */}
+      <Card className="w-full max-w-md shadow-xl z-20 bg-card"> {/* Ensure card has its own background */}
         <CardHeader className="items-center text-center">
           <Logo className="mb-4" iconSize={10} textSize="text-3xl" />
-          <CardTitle className="text-2xl font-bold">Welcome Back!</CardTitle>
-          <CardDescription>Sign in to access EquipCare Hub</CardDescription>
+          <CardTitle className="text-2xl font-bold text-card-foreground">Welcome Back!</CardTitle>
+          <CardDescription className="text-muted-foreground">Sign in to access EquipCare Hub</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -79,7 +73,7 @@ export default function LoginForm() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel className="text-card-foreground">Email</FormLabel>
                     <FormControl>
                       <Input type="email" placeholder="your.email@example.com" {...field} />
                     </FormControl>
@@ -92,7 +86,7 @@ export default function LoginForm() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel className="text-card-foreground">Password</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="••••••••" {...field} />
                     </FormControl>
