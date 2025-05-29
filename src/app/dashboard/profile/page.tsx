@@ -20,33 +20,57 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, UserCircle2 } from "lucide-react";
+import { ArrowLeft, Save, UserCircle2, Mail, KeyRound } from "lucide-react";
 import Link from "next/link";
 import { translations, type SupportedLanguage, languageMap } from "../settings/page";
 
 const profileFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   avatarUrl: z.string().optional().or(z.literal('')),
+  email: z.string().email({ message: "Invalid email address."}).optional().or(z.literal('')),
+  currentPassword: z.string().optional().or(z.literal('')), // Simulated
+  newPassword: z.string().min(6, { message: "New password must be at least 6 characters." }).optional().or(z.literal('')),
+  confirmNewPassword: z.string().optional().or(z.literal('')),
+}).refine(data => {
+  if (data.newPassword && !data.confirmNewPassword) {
+    return false; // Error if new password is set but confirm is not
+  }
+  return data.newPassword === data.confirmNewPassword;
+}, {
+  message: "New passwords don't match",
+  path: ["confirmNewPassword"],
+}).refine(data => {
+  // If new password is provided, current password should also be provided (for simulation)
+  if (data.newPassword && !data.currentPassword) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Current password is required to set a new password.",
+  path: ["currentPassword"],
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 interface UserProfile {
   name: string;
+  email?: string;
   avatarUrl: string;
 }
 
 const DEFAULT_AVATAR_PLACEHOLDER = "https://placehold.co/128x128.png";
 const DEFAULT_USER_NAME = "User Name";
+const DEFAULT_USER_EMAIL = "user@example.com";
 
 export default function ProfilePage() {
   const router = useRouter();
   const { toast } = useToast();
   const [currentUser, setCurrentUser] = useState<UserProfile>({
     name: DEFAULT_USER_NAME,
+    email: DEFAULT_USER_EMAIL,
     avatarUrl: DEFAULT_AVATAR_PLACEHOLDER,
   });
 
@@ -70,43 +94,62 @@ export default function ProfilePage() {
       if (event.key === 'userLanguage') {
         loadLanguage();
       }
+       if (event.key === 'userProfile') {
+        loadProfileData();
+      }
     };
+    
+    const loadProfileData = () => {
+      const storedProfileString = localStorage.getItem("userProfile");
+      if (storedProfileString) {
+        try {
+          const storedProfile: UserProfile = JSON.parse(storedProfileString);
+          setCurrentUser({
+            name: storedProfile.name || DEFAULT_USER_NAME,
+            email: storedProfile.email || DEFAULT_USER_EMAIL,
+            avatarUrl: storedProfile.avatarUrl || DEFAULT_AVATAR_PLACEHOLDER,
+          });
+          form.reset({
+            name: storedProfile.name || DEFAULT_USER_NAME,
+            email: storedProfile.email || DEFAULT_USER_EMAIL,
+            avatarUrl: storedProfile.avatarUrl || "",
+            currentPassword: "",
+            newPassword: "",
+            confirmNewPassword: "",
+          });
+        } catch (e) {
+          console.error("Failed to parse userProfile from localStorage", e);
+          // Reset to defaults if parsing fails
+          setCurrentUser({ name: DEFAULT_USER_NAME, email: DEFAULT_USER_EMAIL, avatarUrl: DEFAULT_AVATAR_PLACEHOLDER });
+          form.reset({ name: DEFAULT_USER_NAME, email: DEFAULT_USER_EMAIL, avatarUrl: "", currentPassword: "", newPassword: "", confirmNewPassword: "" });
+        }
+      } else {
+        // Set defaults if no profile in localStorage
+        setCurrentUser({ name: DEFAULT_USER_NAME, email: DEFAULT_USER_EMAIL, avatarUrl: DEFAULT_AVATAR_PLACEHOLDER });
+        form.reset({ name: DEFAULT_USER_NAME, email: DEFAULT_USER_EMAIL, avatarUrl: "", currentPassword: "", newPassword: "", confirmNewPassword: "" });
+      }
+    };
+
+    loadProfileData();
     window.addEventListener('storage', handleStorageChange);
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, []);
+  }, [form]); // Added form to dependency array for reset
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
       name: DEFAULT_USER_NAME,
       avatarUrl: "",
+      email: DEFAULT_USER_EMAIL,
+      currentPassword: "",
+      newPassword: "",
+      confirmNewPassword: "",
     },
   });
 
   const watchedAvatarUrl = form.watch("avatarUrl");
-
-  useEffect(() => {
-    const storedProfileString = localStorage.getItem("userProfile");
-    if (storedProfileString) {
-      try {
-        const storedProfile: UserProfile = JSON.parse(storedProfileString);
-        setCurrentUser(storedProfile);
-        form.reset({
-          name: storedProfile.name || DEFAULT_USER_NAME,
-          avatarUrl: storedProfile.avatarUrl || "", 
-        });
-      } catch (e) {
-        console.error("Failed to parse userProfile from localStorage", e);
-        setCurrentUser({ name: DEFAULT_USER_NAME, avatarUrl: DEFAULT_AVATAR_PLACEHOLDER });
-        form.reset({ name: DEFAULT_USER_NAME, avatarUrl: "" });
-      }
-    } else {
-        setCurrentUser({ name: DEFAULT_USER_NAME, avatarUrl: DEFAULT_AVATAR_PLACEHOLDER });
-        form.reset({ name: DEFAULT_USER_NAME, avatarUrl: "" });
-    }
-  }, [form]);
 
   const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -122,12 +165,24 @@ export default function ProfilePage() {
   function onSubmit(data: ProfileFormValues) {
     const newProfile: UserProfile = {
       name: data.name,
+      // Use new email if provided, otherwise keep current from state
+      email: data.email ? data.email : currentUser.email, 
       avatarUrl: data.avatarUrl ? data.avatarUrl : currentUser.avatarUrl,
     };
     
     localStorage.setItem("userProfile", JSON.stringify(newProfile));
     setCurrentUser(newProfile); 
     
+    // Clear password fields after submission for security demonstration
+    form.reset({ 
+        ...newProfile, 
+        avatarUrl: data.avatarUrl || "", // Keep avatar if already set
+        currentPassword: "", 
+        newPassword: "", 
+        confirmNewPassword: "" 
+    });
+
+
     window.dispatchEvent(new StorageEvent('storage', {
       key: 'userProfile',
       newValue: JSON.stringify(newProfile),
@@ -138,6 +193,13 @@ export default function ProfilePage() {
       title: currentTranslations.profileUpdatedToastTitle || "Profile Updated",
       description: currentTranslations.profileUpdatedToastDescription || "Your profile information has been saved.",
     });
+    if (data.newPassword) {
+        toast({
+            title: currentTranslations.passwordChangeSimulatedTitle || "Password Change (Simulated)",
+            description: currentTranslations.passwordChangeSimulatedDescription || "Password change is simulated and not actually stored securely in this prototype.",
+            variant: "default", 
+        });
+    }
   }
 
   const displayAvatar = watchedAvatarUrl || currentUser.avatarUrl || DEFAULT_AVATAR_PLACEHOLDER;
@@ -167,7 +229,8 @@ export default function ProfilePage() {
                 </AvatarFallback>
               </Avatar>
               <CardTitle className="text-2xl">{currentUser.name}</CardTitle>
-              <p className="text-sm text-muted-foreground">{currentTranslations.memberRole || "Member"}</p>
+              <p className="text-sm text-muted-foreground">{currentUser.email}</p>
+              <p className="text-xs text-muted-foreground mt-1">{currentTranslations.memberRole || "Member"}</p>
             </CardHeader>
             <CardContent>
               {/* Additional profile info can be displayed here if needed */}
@@ -176,13 +239,13 @@ export default function ProfilePage() {
         </div>
 
         <div className="md:col-span-2">
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle>{currentTranslations.editProfileInformationTitle || "Edit Profile Information"}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <Card className="shadow-lg">
+                <CardHeader>
+                  <CardTitle>{currentTranslations.editProfileInformationTitle || "Edit Profile Information"}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
                   <FormField
                     control={form.control}
                     name="name"
@@ -231,16 +294,90 @@ export default function ProfilePage() {
                       </div>
                     </div>
                   )}
+                </CardContent>
+              </Card>
 
-                  <div className="flex justify-end pt-4">
-                    <Button type="submit">
-                      <Save className="mr-2 h-4 w-4" /> {currentTranslations.saveChangesButton || "Save Changes"}
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
+              <Card className="shadow-lg">
+                <CardHeader>
+                  <CardTitle>{currentTranslations.accountSecurityTitle || "Account Security"}</CardTitle>
+                  <CardDescription>{currentTranslations.accountSecurityDescriptionSimulated || "Change your email or password (Simulated for prototype)"}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>{currentTranslations.emailAddressLabel || "Email Address"}</FormLabel>
+                            <FormControl>
+                            <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Input type="email" placeholder={currentTranslations.yourEmailPlaceholder || "your.email@example.com"} {...field} className="pl-10" />
+                            </div>
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="currentPassword"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>{currentTranslations.currentPasswordLabel || "Current Password"}</FormLabel>
+                            <FormControl>
+                             <div className="relative">
+                                <KeyRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Input type="password" placeholder={currentTranslations.currentPasswordPlaceholder || "Enter current password"} {...field} className="pl-10" />
+                            </div>
+                            </FormControl>
+                            <FormDescription>{currentTranslations.currentPasswordDescriptionSimulated || "Required to change password (Simulated)"}</FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="newPassword"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>{currentTranslations.newPasswordLabel || "New Password"}</FormLabel>
+                            <FormControl>
+                             <div className="relative">
+                                <KeyRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Input type="password" placeholder={currentTranslations.newPasswordPlaceholder || "Enter new password"} {...field} className="pl-10" />
+                            </div>
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="confirmNewPassword"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>{currentTranslations.confirmNewPasswordLabel || "Confirm New Password"}</FormLabel>
+                            <FormControl>
+                             <div className="relative">
+                                <KeyRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Input type="password" placeholder={currentTranslations.confirmNewPasswordPlaceholder || "Confirm new password"} {...field} className="pl-10" />
+                            </div>
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                </CardContent>
+              </Card>
+
+              <div className="flex justify-end pt-4">
+                <Button type="submit">
+                  <Save className="mr-2 h-4 w-4" /> {currentTranslations.saveChangesButton || "Save Changes"}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </div>
       </div>
     </>
