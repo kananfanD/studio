@@ -77,6 +77,18 @@ export default function ProfilePage() {
   const [currentTranslations, setCurrentTranslations] = useState(translations.en);
   const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>("en");
 
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      name: DEFAULT_USER_NAME,
+      avatarUrl: "",
+      email: DEFAULT_USER_EMAIL,
+      currentPassword: "",
+      newPassword: "",
+      confirmNewPassword: "",
+    },
+  });
+
   useEffect(() => {
     const loadLanguage = () => {
       const savedLanguage = localStorage.getItem("userLanguage") as SupportedLanguage | null;
@@ -137,17 +149,6 @@ export default function ProfilePage() {
     };
   }, [form]); // Added form to dependency array for reset
 
-  const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues: {
-      name: DEFAULT_USER_NAME,
-      avatarUrl: "",
-      email: DEFAULT_USER_EMAIL,
-      currentPassword: "",
-      newPassword: "",
-      confirmNewPassword: "",
-    },
-  });
 
   const watchedAvatarUrl = form.watch("avatarUrl");
 
