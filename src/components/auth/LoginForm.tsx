@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -26,7 +27,7 @@ const loginFormSchema = z.object({
 });
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
-type UserRole = "operator" | "maintenance" | "warehouse" | null;
+type UserRole = "operator" | "maintenance-planner" | "warehouse" | null;
 
 export default function LoginForm() {
   const router = useRouter();
@@ -55,24 +56,33 @@ export default function LoginForm() {
             description: "Please select your role first before logging in.",
             variant: "destructive",
         });
-        router.push("/"); // Redirect to role pre-selection page
+        router.push("/"); 
         return;
     }
 
+    let roleDisplayName = userRole;
+    if (userRole === 'maintenance-planner') {
+        roleDisplayName = 'Maintenance Planner';
+    } else if (userRole === 'operator') {
+        roleDisplayName = 'Operator';
+    } else if (userRole === 'warehouse') {
+        roleDisplayName = 'Warehouse Staff';
+    }
+
+
     toast({
       title: "Login Successful",
-      description: `Welcome! Redirecting as ${userRole}...`,
+      description: `Welcome! Redirecting as ${roleDisplayName}...`,
     });
 
     if (userRole === "operator") {
       router.push("/dashboard/maintenance");
     } else if (userRole === "warehouse") {
       router.push("/dashboard/stock");
-    } else if (userRole === "maintenance") {
+    } else if (userRole === "maintenance-planner") {
       router.push("/dashboard");
     } else {
-      // Fallback, though should not happen if role is set
-      router.push("/"); // Back to role selection
+      router.push("/"); 
     }
   }
 

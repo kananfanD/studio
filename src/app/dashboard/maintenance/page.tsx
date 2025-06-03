@@ -52,7 +52,7 @@ export interface MonthlyTask {
   dataAihint?: string;
 }
 
-type UserRole = "operator" | "maintenance" | "warehouse" | null;
+type UserRole = "operator" | "maintenance-planner" | "warehouse" | null;
 
 const initialDailyTasks: DailyTask[] = [
   { id: "dtsort001", taskName: "Pembersihan Sensor Optik", machineId: "SORT-TBK-01", dueDate: "Today", status: "Pending", assignedTo: "Operator Pagi", priority: "High", description: "Bersihkan semua sensor optik dari debu dan residu tembakau.", imageUrl: "https://placehold.co/600x400.png", dataAihint: "sensor industrial" },
@@ -102,9 +102,8 @@ export default function MaintenanceTasksPage() {
       if (event.key === 'userLanguage' || event.key === 'userRole') {
         loadLanguageAndRole();
       }
-      // Also listen for direct task list changes to reload
       if ((event.key === 'dailyTasks' || event.key === 'weeklyTasks' || event.key === 'monthlyTasks' || event.key === 'allMaintenanceTasksLog') && event.newValue) {
-        loadTasksAndPopulateLog(); // Re-run the loading and log population logic
+        loadTasksAndPopulateLog(); 
       }
     };
     window.addEventListener('storage', handleStorageChange);
@@ -144,10 +143,8 @@ export default function MaintenanceTasksPage() {
       setMonthlyTasks(JSON.parse(storedMonthly));
     }
     
-    // If any of the task types were initialized, attempt to initialize the log
     if (isInitialPopulationForAnyType) {
       const storedAllTasksLog = localStorage.getItem("allMaintenanceTasksLog");
-      // Check if log is missing or is an empty array string
       if (!storedAllTasksLog || (storedAllTasksLog && JSON.parse(storedAllTasksLog).length === 0) ) {
         const combinedInitialLog: CombinedTask[] = [];
 
@@ -156,7 +153,6 @@ export default function MaintenanceTasksPage() {
         initialMonthlyTasks.forEach(task => combinedInitialLog.push({ ...task, type: "Monthly" as MaintenanceTaskType, imageUrl: task.imageUrl || "https://placehold.co/600x400.png" }));
         
         localStorage.setItem("allMaintenanceTasksLog", JSON.stringify(combinedInitialLog));
-        // Dispatch event so inventory page can update if it's open
         window.dispatchEvent(new StorageEvent('storage', { key: 'allMaintenanceTasksLog', newValue: JSON.stringify(combinedInitialLog), storageArea: localStorage }));
       }
     }
@@ -166,9 +162,8 @@ export default function MaintenanceTasksPage() {
 
   useEffect(() => {
     loadTasksAndPopulateLog();
-  }, []); // Initial load
+  }, []); 
 
-  // Separate useEffects to save individual task lists when they change
   useEffect(() => {
     if (hasInitialized) {
       localStorage.setItem("dailyTasks", JSON.stringify(dailyTasks));
@@ -212,7 +207,6 @@ export default function MaintenanceTasksPage() {
       setMonthlyTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
     }
 
-    // Also remove from allMaintenanceTasksLog
     const storedAllTasksLogString = localStorage.getItem("allMaintenanceTasksLog");
     if (storedAllTasksLogString) {
         let allTasksLog: CombinedTask[] = JSON.parse(storedAllTasksLogString);

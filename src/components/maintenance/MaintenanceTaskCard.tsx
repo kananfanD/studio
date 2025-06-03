@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/alert-dialog"
 
 export type TaskStatus = "Pending" | "In Progress" | "Completed" | "Overdue";
-type UserRole = "operator" | "maintenance" | "warehouse" | null;
+type UserRole = "operator" | "maintenance-planner" | "warehouse" | null;
 
 interface MaintenanceTaskCardProps {
   id: string;
@@ -33,13 +33,13 @@ interface MaintenanceTaskCardProps {
   imageUrl?: string;
   dataAihint?: string;
   onDelete: (id: string) => void;
-  editPath: string; // e.g., /dashboard/maintenance/daily/new
+  editPath: string; 
   userRole: UserRole;
 }
 
 const statusColors: Record<TaskStatus, string> = {
   Pending: "bg-blue-500 hover:bg-blue-600",
-  "In Progress": "bg-yellow-500 hover:bg-yellow-600 text-black", // Ensure contrast for yellow
+  "In Progress": "bg-yellow-500 hover:bg-yellow-600 text-black", 
   Completed: "bg-green-500 hover:bg-green-600",
   Overdue: "bg-red-600 hover:bg-red-700",
 };
@@ -152,4 +152,3 @@ export default function MaintenanceTaskCard({
     </Card>
   );
 }
-

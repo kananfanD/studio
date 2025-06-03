@@ -31,22 +31,22 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, type ComponentType } from 'react';
 import { translations, type SupportedLanguage, languageMap } from '@/app/dashboard/settings/page';
 
-type UserRole = "operator" | "maintenance" | "warehouse" | null;
+type UserRole = "operator" | "maintenance-planner" | "warehouse" | null;
 
 interface NavItem {
   href: string;
-  labelKey: keyof typeof translations.en; // Use keyof to ensure labelKey exists in translations
-  icon: ComponentType<any>; // LucideIcon type is complex, using any for simplicity here
+  labelKey: keyof typeof translations.en; 
+  icon: ComponentType<any>; 
   roles: UserRole[];
 }
 
 
 const allNavItems: NavItem[] = [
-  { href: '/dashboard', labelKey: 'sidebarDashboard', icon: LayoutDashboard, roles: ['operator', 'maintenance', 'warehouse'] },
-  { href: '/dashboard/maintenance', labelKey: 'sidebarMaintenanceTasks', icon: Wrench, roles: ['operator', 'maintenance'] },
-  { href: '/dashboard/inventory', labelKey: 'sidebarMaintenanceLog', icon: ClipboardList, roles: ['maintenance'] },
-  { href: '/dashboard/stock', labelKey: 'sidebarComponentStock', icon: Archive, roles: ['warehouse', 'maintenance'] },
-  { href: '/dashboard/manuals', labelKey: 'sidebarManuals', icon: BookOpenText, roles: ['operator', 'maintenance'] },
+  { href: '/dashboard', labelKey: 'sidebarDashboard', icon: LayoutDashboard, roles: ['operator', 'maintenance-planner', 'warehouse'] },
+  { href: '/dashboard/maintenance', labelKey: 'sidebarMaintenanceTasks', icon: Wrench, roles: ['operator', 'maintenance-planner'] },
+  { href: '/dashboard/inventory', labelKey: 'sidebarMaintenanceLog', icon: ClipboardList, roles: ['maintenance-planner'] },
+  { href: '/dashboard/stock', labelKey: 'sidebarComponentStock', icon: Archive, roles: ['warehouse', 'maintenance-planner'] },
+  { href: '/dashboard/manuals', labelKey: 'sidebarManuals', icon: BookOpenText, roles: ['operator', 'maintenance-planner'] },
 ];
 
 interface DashboardSidebarProps {
@@ -125,11 +125,10 @@ export default function DashboardSidebar({ isOpen, onToggle, userRole, isMobileV
     if (typeof window !== 'undefined') {
       localStorage.removeItem("equipCareUserLoggedIn");
       localStorage.removeItem("userRole"); 
-      // localStorage.removeItem("userLanguage"); // Optionally reset language on logout
     }
     toast({
       title: currentTranslations.sidebarLogout || "Logged Out",
-      description: "You have been successfully logged out.", // This could also be translated
+      description: "You have been successfully logged out.", 
     });
     router.push('/'); 
   };
@@ -245,6 +244,3 @@ export default function DashboardSidebar({ isOpen, onToggle, userRole, isMobileV
     </aside>
   );
 }
-
-
-    

@@ -10,18 +10,18 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu as MenuIcon } from "lucide-react"; 
 
-type UserRole = "operator" | "maintenance" | "warehouse" | null;
+type UserRole = "operator" | "maintenance-planner" | "warehouse" | null;
 
 const commonAllowedPaths = ["/dashboard/profile", "/dashboard/settings"];
 const operatorAllowedPathPrefixes = ["/dashboard/maintenance", "/dashboard/manuals", "/dashboard", ...commonAllowedPaths];
 const warehouseAllowedPathPrefixes = ["/dashboard/stock", "/dashboard", ...commonAllowedPaths];
-const maintenanceAllowedPathPrefixes = ["/dashboard"]; 
+// maintenance-planner has access to all /dashboard paths (defined in isPathAllowed)
 
 function isPathAllowed(path: string, role: UserRole): boolean {
   if (!role) return false;
 
-  if (role === "maintenance") {
-    // Maintenance has access to all /dashboard paths
+  if (role === "maintenance-planner") {
+    // Maintenance planner has access to all /dashboard paths
     return path.startsWith("/dashboard");
   }
   if (role === "operator") {
@@ -98,7 +98,8 @@ export default function DashboardLayout({
         } else {
           if (role === "operator") router.push("/dashboard/maintenance");
           else if (role === "warehouse") router.push("/dashboard/stock");
-          else router.push("/dashboard"); 
+          else if (role === "maintenance-planner") router.push("/dashboard"); 
+          else router.push("/dashboard"); // Fallback to general dashboard
         }
       }
       setIsLoading(false);
@@ -130,6 +131,7 @@ export default function DashboardLayout({
             setIsAuthorized(false); 
             if (currentRoleFromStorage === "operator") router.push("/dashboard/maintenance");
             else if (currentRoleFromStorage === "warehouse") router.push("/dashboard/stock");
+            else if (currentRoleFromStorage === "maintenance-planner") router.push("/dashboard");
             else router.push("/dashboard"); 
         }
     }

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -12,15 +13,15 @@ export default function PreRoleSelectionPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const handleRoleSelect = (role: string) => {
+  const handleRoleSelect = (role: string, roleDisplayName: string) => {
     if (typeof window !== "undefined") {
       localStorage.setItem("userRole", role);
     }
     toast({
       title: "Role Noted",
-      description: `You've selected ${role}. Please log in.`,
+      description: `You've selected ${roleDisplayName}. Please log in.`,
     });
-    router.push("/login"); // Redirect to the new login page
+    router.push("/login");
   };
 
   return (
@@ -35,21 +36,21 @@ export default function PreRoleSelectionPage() {
           <Button
             variant="outline"
             className="w-full h-14 text-base justify-start p-4"
-            onClick={() => handleRoleSelect("operator")}
+            onClick={() => handleRoleSelect("operator", "Operator")}
           >
             <Wrench className="mr-3 h-6 w-6 text-primary" /> Operator
           </Button>
           <Button
             variant="outline"
             className="w-full h-14 text-base justify-start p-4"
-            onClick={() => handleRoleSelect("maintenance")}
+            onClick={() => handleRoleSelect("maintenance-planner", "Maintenance Planner")}
           >
-            <User className="mr-3 h-6 w-6 text-primary" /> Maintenance Staff
+            <User className="mr-3 h-6 w-6 text-primary" /> Maintenance Planner
           </Button>
           <Button
             variant="outline"
             className="w-full h-14 text-base justify-start p-4"
-            onClick={() => handleRoleSelect("warehouse")}
+            onClick={() => handleRoleSelect("warehouse", "Warehouse Staff")}
           >
             <Warehouse className="mr-3 h-6 w-6 text-primary" /> Warehouse Staff
           </Button>

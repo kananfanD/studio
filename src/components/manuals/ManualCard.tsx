@@ -16,7 +16,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
-type UserRole = "operator" | "maintenance" | "warehouse" | null;
+type UserRole = "operator" | "maintenance-planner" | "warehouse" | null;
 
 interface ManualCardProps {
   id: string;
@@ -111,18 +111,8 @@ export default function ManualCard({
             </AlertDialog>
           </>
         )}
-        <Button variant="outline" size="sm" className={userRole === "operator" ? "col-span-1 flex-1" : "col-span-1 flex-1"} asChild>
-          <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
-            <Eye className="mr-2 h-4 w-4" /> View PDF
-          </a>
-        </Button>
-        <Button variant="default" size="sm" className={userRole === "operator" ? "col-span-1 flex-1" : "col-span-1 flex-1"} asChild>
-          <a href={pdfUrl} download={`${manualTitle.replace(/\s+/g, '_')}.pdf`}>
-            <Download className="mr-2 h-4 w-4" /> Download
-          </a>
-        </Button>
-        {/* If operator, and we want to ensure full width for view/download when edit/delete are hidden, adjust col-span or use different grid layout*/}
-        {userRole === "operator" && (
+        {/* Conditional rendering for operator ensuring full width for view/download */}
+        {userRole === "operator" ? (
              <div className="col-span-2 grid grid-cols-2 gap-2">
                  <Button variant="outline" size="sm" className="flex-1" asChild>
                     <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
@@ -135,6 +125,19 @@ export default function ManualCard({
                     </a>
                 </Button>
             </div>
+        ) : (
+            <>
+                <Button variant="outline" size="sm" className="col-span-1 flex-1" asChild>
+                <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
+                    <Eye className="mr-2 h-4 w-4" /> View PDF
+                </a>
+                </Button>
+                <Button variant="default" size="sm" className="col-span-1 flex-1" asChild>
+                <a href={pdfUrl} download={`${manualTitle.replace(/\s+/g, '_')}.pdf`}>
+                    <Download className="mr-2 h-4 w-4" /> Download
+                </a>
+                </Button>
+            </>
         )}
       </CardFooter>
     </Card>

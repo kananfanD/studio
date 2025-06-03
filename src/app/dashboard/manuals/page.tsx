@@ -21,7 +21,7 @@ export interface Manual {
   dataAihint?: string;
 }
 
-type UserRole = "operator" | "maintenance" | "warehouse" | null;
+type UserRole = "operator" | "maintenance-planner" | "warehouse" | null;
 
 const initialManuals: Manual[] = [
   { id: "man001", manualTitle: "CNC Mill XM500 Operator Manual", machineType: "CNC XM500", version: "3.1", lastUpdated: "2023-05-15", pdfUrl: "#", coverImageUrl: "https://placehold.co/600x400.png", dataAihint:"cnc machine"},
@@ -88,7 +88,6 @@ export default function ManualBookPage() {
   }, [manuals, hasInitialized]);
 
   const handleDeleteManual = (manualId: string) => {
-    // Operator should not be able to delete, this check is an additional safeguard
     if (userRole === "operator") {
         toast({
             title: "Action Not Allowed",

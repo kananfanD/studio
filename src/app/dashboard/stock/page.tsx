@@ -21,7 +21,7 @@ export interface StockItem {
   dataAihint?: string;
 }
 
-type UserRole = "operator" | "maintenance" | "warehouse" | null;
+type UserRole = "operator" | "maintenance-planner" | "warehouse" | null;
 
 const initialStockItems: StockItem[] = [
   { id: "stk001", componentName: "Bearing SKF-6205", partNumber: "SKF-6205-2Z", quantity: 50, location: "Shelf A1", minStockLevel: 10, imageUrl: "https://placehold.co/600x400.png", dataAihint:"bearing metal"},
