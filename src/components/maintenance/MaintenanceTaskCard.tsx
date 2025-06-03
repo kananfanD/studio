@@ -31,6 +31,7 @@ interface MaintenanceTaskCardProps {
   priority?: "Low" | "Medium" | "High";
   description?: string;
   imageUrl?: string;
+  dataAihint?: string;
   onDelete: (id: string) => void;
   editPath: string; // e.g., /dashboard/maintenance/daily/new
   userRole: UserRole;
@@ -60,13 +61,14 @@ export default function MaintenanceTaskCard({
   priority,
   description,
   imageUrl = "https://placehold.co/600x400.png",
+  dataAihint,
   onDelete,
   editPath,
   userRole,
 }: MaintenanceTaskCardProps) {
   const StatusIcon = statusIcons[status];
 
-  const editUrl = `${editPath}?id=${id}&taskName=${encodeURIComponent(taskName)}&machineId=${encodeURIComponent(machineId)}&dueDate=${encodeURIComponent(dueDate)}&status=${encodeURIComponent(status)}${assignedTo ? `&assignedTo=${encodeURIComponent(assignedTo)}` : ''}${priority ? `&priority=${encodeURIComponent(priority)}` : ''}${description ? `&description=${encodeURIComponent(description)}` : ''}${imageUrl ? `&imageUrl=${encodeURIComponent(imageUrl)}` : ''}`;
+  const editUrl = `${editPath}?id=${id}&taskName=${encodeURIComponent(taskName)}&machineId=${encodeURIComponent(machineId)}&dueDate=${encodeURIComponent(dueDate)}&status=${encodeURIComponent(status)}${assignedTo ? `&assignedTo=${encodeURIComponent(assignedTo)}` : ''}${priority ? `&priority=${encodeURIComponent(priority)}` : ''}${description ? `&description=${encodeURIComponent(description)}` : ''}${imageUrl ? `&imageUrl=${encodeURIComponent(imageUrl)}` : ''}${dataAihint ? `&dataAihint=${encodeURIComponent(dataAihint || "")}` : ''}`;
 
   return (
     <Card className="flex flex-col overflow-hidden shadow-lg transition-all hover:shadow-xl">
@@ -76,7 +78,7 @@ export default function MaintenanceTaskCard({
           alt={taskName}
           layout="fill"
           objectFit="cover"
-          data-ai-hint="maintenance tools"
+          data-ai-hint={dataAihint || "maintenance tools"}
         />
       </div>
       <CardHeader>
@@ -150,3 +152,4 @@ export default function MaintenanceTaskCard({
     </Card>
   );
 }
+

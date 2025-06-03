@@ -22,6 +22,7 @@ export interface DailyTask {
   priority?: "Low" | "Medium" | "High";
   description?: string;
   imageUrl?: string;
+  dataAihint?: string;
 }
 
 export interface WeeklyTask {
@@ -34,6 +35,7 @@ export interface WeeklyTask {
   priority?: "Low" | "Medium" | "High";
   description?: string;
   imageUrl?: string;
+  dataAihint?: string;
 }
 
 export interface MonthlyTask {
@@ -46,24 +48,25 @@ export interface MonthlyTask {
   priority?: "Low" | "Medium" | "High";
   description?: string;
   imageUrl?: string;
+  dataAihint?: string;
 }
 
 type UserRole = "operator" | "maintenance" | "warehouse" | null;
 
 const initialDailyTasks: DailyTask[] = [
-  { id: "dtsort001", taskName: "Pembersihan Sensor Optik", machineId: "SORT-TBK-01", dueDate: "Today", status: "Pending", assignedTo: "Operator Pagi", priority: "High", description: "Bersihkan semua sensor optik dari debu dan residu tembakau.", imageUrl: "https://placehold.co/600x400.png" },
-  { id: "dtsort002", taskName: "Cek Tekanan Udara Kompresor", machineId: "SORT-TBK-01", dueDate: "Today", status: "Pending", assignedTo: "Operator Pagi", priority: "Medium", description: "Pastikan tekanan udara pada kompresor ejector sesuai standar.", imageUrl: "https://placehold.co/600x400.png" },
-  { id: "dtsort003", taskName: "Inspeksi Conveyor Belt", machineId: "SORT-TBK-01", dueDate: "Today", status: "In Progress", assignedTo: "Operator Pagi", priority: "Medium", description: "Periksa kondisi fisik conveyor belt, pastikan tidak ada sobekan atau benda asing.", imageUrl: "https://placehold.co/600x400.png"},
+  { id: "dtsort001", taskName: "Pembersihan Sensor Optik", machineId: "SORT-TBK-01", dueDate: "Today", status: "Pending", assignedTo: "Operator Pagi", priority: "High", description: "Bersihkan semua sensor optik dari debu dan residu tembakau.", imageUrl: "https://placehold.co/600x400.png", dataAihint: "sensor industrial" },
+  { id: "dtsort002", taskName: "Cek Tekanan Udara Kompresor", machineId: "SORT-TBK-01", dueDate: "Today", status: "Pending", assignedTo: "Operator Pagi", priority: "Medium", description: "Pastikan tekanan udara pada kompresor ejector sesuai standar.", imageUrl: "https://placehold.co/600x400.png", dataAihint: "air compressor" },
+  { id: "dtsort003", taskName: "Inspeksi Conveyor Belt", machineId: "SORT-TBK-01", dueDate: "Today", status: "In Progress", assignedTo: "Operator Pagi", priority: "Medium", description: "Periksa kondisi fisik conveyor belt, pastikan tidak ada sobekan atau benda asing.", imageUrl: "https://placehold.co/600x400.png", dataAihint: "conveyor belt"},
 ];
 const initialWeeklyTasks: WeeklyTask[] = [
-  { id: "wtsort001", taskName: "Kalibrasi Kamera Pemilah", machineId: "SORT-TBK-01", dueDate: "This Week", status: "Pending", assignedTo: "Tim Maintenance", priority: "High", description: "Lakukan kalibrasi pada kamera pemilah warna dan ukuran.", imageUrl: "https://placehold.co/600x400.png" },
-  { id: "wtsort002", taskName: "Pembersihan Area Ejector", machineId: "SORT-TBK-01", dueDate: "This Week", status: "Pending", assignedTo: "Tim Maintenance", priority: "Medium", description: "Bersihkan nozel ejector dan area sekitarnya dari penumpukan tembakau.", imageUrl: "https://placehold.co/600x400.png" },
-  { id: "wtsort003", taskName: "Cek Pelumasan Bearing Conveyor", machineId: "SORT-TBK-01", dueDate: "This Week", status: "Pending", assignedTo: "Tim Maintenance", priority: "Medium", description: "Periksa dan tambahkan pelumas pada bearing conveyor jika diperlukan.", imageUrl: "https://placehold.co/600x400.png" },
+  { id: "wtsort001", taskName: "Kalibrasi Kamera Pemilah", machineId: "SORT-TBK-01", dueDate: "This Week", status: "Pending", assignedTo: "Tim Maintenance", priority: "High", description: "Lakukan kalibrasi pada kamera pemilah warna dan ukuran.", imageUrl: "https://placehold.co/600x400.png", dataAihint: "camera lens" },
+  { id: "wtsort002", taskName: "Pembersihan Area Ejector", machineId: "SORT-TBK-01", dueDate: "This Week", status: "Pending", assignedTo: "Tim Maintenance", priority: "Medium", description: "Bersihkan nozel ejector dan area sekitarnya dari penumpukan tembakau.", imageUrl: "https://placehold.co/600x400.png", dataAihint: "machine nozzle" },
+  { id: "wtsort003", taskName: "Cek Pelumasan Bearing Conveyor", machineId: "SORT-TBK-01", dueDate: "This Week", status: "Pending", assignedTo: "Tim Maintenance", priority: "Medium", description: "Periksa dan tambahkan pelumas pada bearing conveyor jika diperlukan.", imageUrl: "https://placehold.co/600x400.png", dataAihint: "machine bearing" },
 ];
 const initialMonthlyTasks: MonthlyTask[] = [
-  { id: "mtsort001", taskName: "Pemeriksaan Umum Panel Listrik", machineId: "SORT-TBK-01", dueDate: "End of Month", status: "Pending", priority: "High", description: "Periksa koneksi kabel dan kebersihan panel listrik utama mesin.", imageUrl: "https://placehold.co/600x400.png"},
-  { id: "mtsort002", taskName: "Penggantian Filter Udara Kompresor", machineId: "SORT-TBK-01", dueDate: "End of Month", status: "Pending", assignedTo: "Tim Maintenance", priority: "Medium", description: "Ganti filter udara pada sistem kompresor ejector.", imageUrl: "https://placehold.co/600x400.png" },
-  { id: "mtsort003", taskName: "Backup Konfigurasi Sistem", machineId: "SORT-TBK-01", dueDate: "Mid Month", status: "Completed", assignedTo: "Ahli IT", priority: "High", description: "Lakukan backup penuh konfigurasi sistem pemilahan.", imageUrl: "https://placehold.co/600x400.png"},
+  { id: "mtsort001", taskName: "Pemeriksaan Umum Panel Listrik", machineId: "SORT-TBK-01", dueDate: "End of Month", status: "Pending", priority: "High", description: "Periksa koneksi kabel dan kebersihan panel listrik utama mesin.", imageUrl: "https://placehold.co/600x400.png", dataAihint: "electrical panel"},
+  { id: "mtsort002", taskName: "Penggantian Filter Udara Kompresor", machineId: "SORT-TBK-01", dueDate: "End of Month", status: "Pending", assignedTo: "Tim Maintenance", priority: "Medium", description: "Ganti filter udara pada sistem kompresor ejector.", imageUrl: "https://placehold.co/600x400.png", dataAihint: "air filter" },
+  { id: "mtsort003", taskName: "Backup Konfigurasi Sistem", machineId: "SORT-TBK-01", dueDate: "Mid Month", status: "Completed", assignedTo: "Ahli IT", priority: "High", description: "Lakukan backup penuh konfigurasi sistem pemilahan.", imageUrl: "https://placehold.co/600x400.png", dataAihint: "server system"},
 ];
 
 
@@ -234,6 +237,7 @@ export default function MaintenanceTasksPage() {
                 onDelete={() => handleDeleteTask(task.id, "daily")}
                 editPath="/dashboard/maintenance/daily/new"
                 imageUrl={task.imageUrl || "https://placehold.co/600x400.png"}
+                dataAihint={task.dataAihint}
                 userRole={userRole}
               />
             ))}
@@ -255,6 +259,7 @@ export default function MaintenanceTasksPage() {
                 onDelete={() => handleDeleteTask(task.id, "weekly")}
                 editPath="/dashboard/maintenance/weekly/new"
                 imageUrl={task.imageUrl || "https://placehold.co/600x400.png"}
+                dataAihint={task.dataAihint}
                 userRole={userRole}
               />
             ))}
@@ -276,6 +281,7 @@ export default function MaintenanceTasksPage() {
                 onDelete={() => handleDeleteTask(task.id, "monthly")}
                 editPath="/dashboard/maintenance/monthly/new"
                 imageUrl={task.imageUrl || "https://placehold.co/600x400.png"}
+                dataAihint={task.dataAihint}
                 userRole={userRole}
               />
             ))}
