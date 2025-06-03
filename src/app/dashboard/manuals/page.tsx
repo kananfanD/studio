@@ -21,6 +21,8 @@ export interface Manual {
   dataAihint?: string;
 }
 
+type UserRole = "operator" | "maintenance" | "warehouse" | null;
+
 const initialManuals: Manual[] = [
   { id: "man001", manualTitle: "CNC Mill XM500 Operator Manual", machineType: "CNC XM500", version: "3.1", lastUpdated: "2023-05-15", pdfUrl: "#", coverImageUrl: "https://placehold.co/600x400.png", dataAihint:"cnc machine"},
   { id: "man002", manualTitle: "Hydraulic Press HP-20 Maintenance Guide", machineType: "HP-20 Press", version: "1.5", lastUpdated: "2022-11-01", pdfUrl: "#", coverImageUrl: "https://placehold.co/600x400.png", dataAihint:"hydraulic press"},
@@ -31,12 +33,13 @@ export default function ManualBookPage() {
   const [manuals, setManuals] = useState<Manual[]>([]);
   const [hasInitialized, setHasInitialized] = useState(false);
   const { toast } = useToast();
+  const [userRole, setUserRole] = useState<UserRole>(null);
 
   const [currentTranslations, setCurrentTranslations] = useState(translations.en);
   const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>("en");
 
   useEffect(() => {
-    const loadLanguage = () => {
+    const loadLanguageAndRole = () => {
       const savedLanguage = localStorage.getItem("userLanguage") as SupportedLanguage | null;
       if (savedLanguage && languageMap[savedLanguage]) {
         setSelectedLanguage(savedLanguage);
@@ -45,12 +48,14 @@ export default function ManualBookPage() {
         setSelectedLanguage("en");
         setCurrentTranslations(translations.en);
       }
+      const role = localStorage.getItem("userRole") as UserRole;
+      setUserRole(role);
     };
-    loadLanguage();
+    loadLanguageAndRole();
 
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'userLanguage') {
-        loadLanguage();
+      if (event.key === 'userLanguage' || event.key === 'userRole') {
+        loadLanguageAndRole();
       }
     };
     window.addEventListener('storage', handleStorageChange);
@@ -83,6 +88,15 @@ export default function ManualBookPage() {
   }, [manuals, hasInitialized]);
 
   const handleDeleteManual = (manualId: string) => {
+    // Operator should not be able to delete, this check is an additional safeguard
+    if (userRole === "operator") {
+        toast({
+            title: "Action Not Allowed",
+            description: "Operators cannot delete manuals.",
+            variant: "destructive",
+        });
+        return;
+    }
     setManuals(prevManuals => prevManuals.filter(manual => manual.id !== manualId));
     toast({
       title: currentTranslations.manualDeletedToastTitle || "Manual Deleted",
@@ -97,11 +111,13 @@ export default function ManualBookPage() {
         title={currentTranslations.pageTitleManuals || "Maintenance Manuals"}
         description={currentTranslations.pageDescriptionManuals || "Access and manage all technical manuals and guides."}
       >
-        <Button asChild>
-          <Link href="/dashboard/manuals/new">
-            <UploadCloud className="mr-2 h-4 w-4" /> {currentTranslations.uploadNewManualButton || "Upload New Manual"}
-          </Link>
-        </Button>
+        {userRole !== "operator" && (
+          <Button asChild>
+            <Link href="/dashboard/manuals/new">
+              <UploadCloud className="mr-2 h-4 w-4" /> {currentTranslations.uploadNewManualButton || "Upload New Manual"}
+            </Link>
+          </Button>
+        )}
       </PageHeader>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {manuals.map(manual => (
@@ -112,6 +128,7 @@ export default function ManualBookPage() {
             editPath="/dashboard/manuals/new"
             coverImageUrl={manual.coverImageUrl || "https://placehold.co/600x400.png"}
             dataAihint={manual.dataAihint}
+            userRole={userRole}
           />
         ))}
         {hasInitialized && manuals.length === 0 && (
@@ -120,11 +137,13 @@ export default function ManualBookPage() {
             <h3 className="mt-2 text-sm font-medium text-foreground">{currentTranslations.noManualsFound || "No manuals found"}</h3>
             <p className="mt-1 text-sm text-muted-foreground">{currentTranslations.getStartedByUploadingManual || "Get started by uploading a new manual."}</p>
             <div className="mt-6">
-              <Button asChild>
-                <Link href="/dashboard/manuals/new">
-                  <PlusCircle className="mr-2 h-4 w-4" /> {currentTranslations.uploadManualButton || "Upload Manual"}
-                </Link>
-              </Button>
+              {userRole !== "operator" && (
+                <Button asChild>
+                  <Link href="/dashboard/manuals/new">
+                    <PlusCircle className="mr-2 h-4 w-4" /> {currentTranslations.uploadManualButton || "Upload Manual"}
+                  </Link>
+                </Button>
+              )}
             </div>
           </div>
         )}
@@ -132,5 +151,3 @@ export default function ManualBookPage() {
     </>
   );
 }
-
-    

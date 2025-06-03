@@ -21,6 +21,8 @@ export interface StockItem {
   dataAihint?: string;
 }
 
+type UserRole = "operator" | "maintenance" | "warehouse" | null;
+
 const initialStockItems: StockItem[] = [
   { id: "stk001", componentName: "Bearing SKF-6205", partNumber: "SKF-6205-2Z", quantity: 50, location: "Shelf A1", minStockLevel: 10, imageUrl: "https://placehold.co/600x400.png", dataAihint:"bearing metal"},
   { id: "stk002", componentName: "Filter Element H-24", partNumber: "FLT-H-24B", quantity: 5, location: "Cabinet B3", minStockLevel: 8, imageUrl: "https://placehold.co/600x400.png", dataAihint:"filter industrial"},
@@ -33,12 +35,13 @@ export default function ComponentStockPage() {
   const [stockItems, setStockItems] = useState<StockItem[]>([]);
   const [hasInitialized, setHasInitialized] = useState(false);
   const { toast } = useToast();
+  const [userRole, setUserRole] = useState<UserRole>(null);
 
   const [currentTranslations, setCurrentTranslations] = useState(translations.en);
   const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>("en");
 
   useEffect(() => {
-    const loadLanguage = () => {
+    const loadLanguageAndRole = () => {
       const savedLanguage = localStorage.getItem("userLanguage") as SupportedLanguage | null;
       if (savedLanguage && languageMap[savedLanguage]) {
         setSelectedLanguage(savedLanguage);
@@ -47,12 +50,14 @@ export default function ComponentStockPage() {
         setSelectedLanguage("en");
         setCurrentTranslations(translations.en);
       }
+      const role = localStorage.getItem("userRole") as UserRole;
+      setUserRole(role);
     };
-    loadLanguage();
+    loadLanguageAndRole();
     
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'userLanguage') {
-        loadLanguage();
+      if (event.key === 'userLanguage' || event.key === 'userRole') {
+        loadLanguageAndRole();
       }
     };
     window.addEventListener('storage', handleStorageChange);
@@ -84,6 +89,14 @@ export default function ComponentStockPage() {
   }, [stockItems, hasInitialized]);
 
   const handleDeleteItem = (itemId: string) => {
+    if (userRole === "operator") {
+        toast({
+            title: "Action Not Allowed",
+            description: "Operators cannot delete stock items.",
+            variant: "destructive",
+        });
+        return;
+    }
     setStockItems(prevItems => prevItems.filter(item => item.id !== itemId));
     toast({
       title: currentTranslations.stockItemDeletedToastTitle || "Stock Item Deleted",
@@ -98,11 +111,13 @@ export default function ComponentStockPage() {
         title={currentTranslations.pageTitleComponentStock || "Component Stock Management"}
         description={currentTranslations.pageDescriptionComponentStock || "Track inventory levels for all machine components."}
       >
-        <Button asChild>
-          <Link href="/dashboard/stock/new">
-            <PlusCircle className="mr-2 h-4 w-4" /> {currentTranslations.addNewComponentButton || "Add New Component"}
-          </Link>
-        </Button>
+        {userRole !== "operator" && (
+          <Button asChild>
+            <Link href="/dashboard/stock/new">
+              <PlusCircle className="mr-2 h-4 w-4" /> {currentTranslations.addNewComponentButton || "Add New Component"}
+            </Link>
+          </Button>
+        )}
       </PageHeader>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {stockItems.map(item => (
@@ -113,6 +128,7 @@ export default function ComponentStockPage() {
             editPath="/dashboard/stock/new"
             imageUrl={item.imageUrl || "https://placehold.co/600x400.png"}
             dataAihint={item.dataAihint}
+            userRole={userRole}
           />
         ))}
       </div>
@@ -122,16 +138,16 @@ export default function ComponentStockPage() {
             <h3 className="mt-2 text-sm font-medium text-foreground">{currentTranslations.noStockItemsFound || "No stock items found"}</h3>
             <p className="mt-1 text-sm text-muted-foreground">{currentTranslations.getStartedByAddingComponent || "Get started by adding a new component."}</p>
             <div className="mt-6">
-              <Button asChild>
-                <Link href="/dashboard/stock/new">
-                  <PlusCircle className="mr-2 h-4 w-4" /> {currentTranslations.addComponentButton || "Add Component"}
-                </Link>
-              </Button>
+              {userRole !== "operator" && (
+                <Button asChild>
+                    <Link href="/dashboard/stock/new">
+                    <PlusCircle className="mr-2 h-4 w-4" /> {currentTranslations.addComponentButton || "Add Component"}
+                    </Link>
+                </Button>
+              )}
             </div>
           </div>
       )}
     </>
   );
 }
-
-    

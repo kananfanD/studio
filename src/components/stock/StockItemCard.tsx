@@ -18,6 +18,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
+type UserRole = "operator" | "maintenance" | "warehouse" | null;
+
 interface StockItemCardProps {
   id: string;
   componentName: string;
@@ -29,6 +31,7 @@ interface StockItemCardProps {
   dataAihint?: string;
   onDelete: (id: string) => void;
   editPath: string;
+  userRole: UserRole;
 }
 
 export default function StockItemCard({
@@ -42,6 +45,7 @@ export default function StockItemCard({
   dataAihint,
   onDelete,
   editPath,
+  userRole,
 }: StockItemCardProps) {
   const isLowStock = minStockLevel !== undefined && quantity < minStockLevel;
 
@@ -84,35 +88,40 @@ export default function StockItemCard({
         )}
       </CardContent>
       <CardFooter className="grid grid-cols-2 gap-2 border-t pt-4">
-         <Button variant="outline" size="sm" className="flex-1" asChild>
-          <Link href={editUrl}>
-            <Edit3 className="mr-2 h-4 w-4" /> Edit
-          </Link>
-        </Button>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive" size="sm" className="flex-1">
-              <Trash2 className="mr-2 h-4 w-4" /> Delete
+        {userRole !== "operator" ? (
+          <>
+            <Button variant="outline" size="sm" className="flex-1" asChild>
+              <Link href={editUrl}>
+                <Edit3 className="mr-2 h-4 w-4" /> Edit
+              </Link>
             </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the stock item
-                &quot;{componentName}&quot;.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => onDelete(id)}>Delete</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-        {/* Example additional action, can be removed or repurposed */}
-        <Button variant="default" size="sm" className="col-span-2 flex-1 mt-2">
-          <PackagePlus className="mr-2 h-4 w-4" /> Order More
-        </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" className="flex-1">
+                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the stock item
+                    &quot;{componentName}&quot;.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => onDelete(id)}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            <Button variant="default" size="sm" className="col-span-2 flex-1 mt-2">
+              <PackagePlus className="mr-2 h-4 w-4" /> Order More
+            </Button>
+          </>
+        ) : (
+          <p className="col-span-2 text-sm text-muted-foreground text-center">Operators cannot modify stock items.</p>
+        )}
       </CardFooter>
     </Card>
   );

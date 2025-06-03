@@ -38,7 +38,7 @@ interface MaintenanceTaskCardProps {
 
 const statusColors: Record<TaskStatus, string> = {
   Pending: "bg-blue-500 hover:bg-blue-600",
-  "In Progress": "bg-yellow-500 hover:bg-yellow-600",
+  "In Progress": "bg-yellow-500 hover:bg-yellow-600 text-black", // Ensure contrast for yellow
   Completed: "bg-green-500 hover:bg-green-600",
   Overdue: "bg-red-600 hover:bg-red-700",
 };
@@ -47,7 +47,7 @@ const statusIcons: Record<TaskStatus, React.ElementType> = {
   Pending: Clock,
   "In Progress": Wrench,
   Completed: CheckCircle2,
-  Overdue: AlertTriangle, // Changed for overdue
+  Overdue: AlertTriangle, 
 };
 
 export default function MaintenanceTaskCard({
@@ -82,7 +82,7 @@ export default function MaintenanceTaskCard({
       <CardHeader>
         <div className="flex items-start justify-between">
           <CardTitle className="text-xl tracking-tight">{taskName}</CardTitle>
-          <Badge className={cn(statusColors[status], "text-white ml-2 shrink-0 flex items-center")}>
+          <Badge className={cn(statusColors[status], "text-white ml-2 shrink-0 flex items-center", status === "In Progress" ? "text-black" : "text-white" )}>
             <StatusIcon className="mr-1 h-3.5 w-3.5" />
             {status}
           </Badge>
@@ -102,7 +102,16 @@ export default function MaintenanceTaskCard({
         )}
         {priority && (
           <div className="flex items-center">
-             <Badge variant={priority === 'High' ? 'destructive' : priority === 'Medium' ? 'secondary' : 'outline'} className="capitalize">{priority}</Badge>
+             <Badge 
+                variant={priority === 'High' ? 'destructive' : priority === 'Medium' ? 'secondary' : 'outline'} 
+                className={cn(
+                    "capitalize",
+                    priority === 'Medium' ? "bg-yellow-500 border-yellow-500 text-black hover:bg-yellow-600" : "",
+                    priority === 'Low' ? "border-gray-400 text-muted-foreground hover:bg-gray-100 dark:hover:bg-gray-700" : ""
+                )}
+            >
+                {priority}
+            </Badge>
           </div>
         )}
         {description && (
