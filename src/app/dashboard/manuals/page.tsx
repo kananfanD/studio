@@ -88,10 +88,11 @@ export default function ManualBookPage() {
   }, [manuals, hasInitialized]);
 
   const handleDeleteManual = (manualId: string) => {
-    if (userRole === "operator") {
+    // Operator (Operator & Maintenance) and Maintenance Planner can delete
+    if (userRole === "warehouse") {
         toast({
             title: "Action Not Allowed",
-            description: "Operators cannot delete manuals.",
+            description: "Warehouse staff cannot delete manuals.",
             variant: "destructive",
         });
         return;
@@ -104,13 +105,16 @@ export default function ManualBookPage() {
     });
   };
   
+  // Operator (Operator & Maintenance) and Maintenance Planner can upload
+  const canUploadManual = userRole === "operator" || userRole === "maintenance-planner";
+
   return (
     <>
       <PageHeader 
         title={currentTranslations.pageTitleManuals || "Maintenance Manuals"}
         description={currentTranslations.pageDescriptionManuals || "Access and manage all technical manuals and guides."}
       >
-        {userRole !== "operator" && (
+        {canUploadManual && (
           <Button asChild>
             <Link href="/dashboard/manuals/new">
               <UploadCloud className="mr-2 h-4 w-4" /> {currentTranslations.uploadNewManualButton || "Upload New Manual"}
@@ -136,7 +140,7 @@ export default function ManualBookPage() {
             <h3 className="mt-2 text-sm font-medium text-foreground">{currentTranslations.noManualsFound || "No manuals found"}</h3>
             <p className="mt-1 text-sm text-muted-foreground">{currentTranslations.getStartedByUploadingManual || "Get started by uploading a new manual."}</p>
             <div className="mt-6">
-              {userRole !== "operator" && (
+              {canUploadManual && (
                 <Button asChild>
                   <Link href="/dashboard/manuals/new">
                     <PlusCircle className="mr-2 h-4 w-4" /> {currentTranslations.uploadManualButton || "Upload Manual"}

@@ -184,14 +184,18 @@ export default function MaintenanceTasksPage() {
 
 
   const handleDeleteTask = (taskId: string, type: "daily" | "weekly" | "monthly") => {
-    if (userRole === "operator") {
+    // Operator (now Operator & Maintenance) can delete tasks
+    // Maintenance Planner can delete tasks
+    // Warehouse cannot delete tasks (though they shouldn't see this page by default)
+    if (userRole === "warehouse") { 
         toast({
             title: "Action Not Allowed",
-            description: "Operators cannot delete tasks.",
+            description: "Warehouse staff cannot delete tasks.",
             variant: "destructive",
         });
         return;
     }
+
     let taskName = "";
     if (type === "daily") {
       const taskToDelete = dailyTasks.find(task => task.id === taskId);
@@ -237,13 +241,16 @@ export default function MaintenanceTasksPage() {
 
   const { text: buttonText, href: buttonHref, icon: ButtonIcon } = getButtonInfo();
 
+  // Show "Add New Task" button for 'operator' (Operator & Maintenance) and 'maintenance-planner'
+  const canAddTask = userRole === "operator" || userRole === "maintenance-planner";
+
   return (
     <>
       <PageHeader
         title={currentTranslations.pageTitleMaintenanceTasks || "Maintenance Tasks"}
         description={currentTranslations.pageDescriptionMaintenanceTasks || "Manage and track all maintenance activities."}
       >
-        {userRole !== "operator" && (
+        {canAddTask && (
           <Button asChild className="w-full sm:w-auto">
             <Link href={buttonHref}>
               <ButtonIcon className="mr-2 h-4 w-4" /> {buttonText}

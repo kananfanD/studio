@@ -48,6 +48,9 @@ export default function ManualCard({
 
   const editUrl = `${editPath}?id=${id}&manualTitle=${encodeURIComponent(manualTitle)}&machineType=${encodeURIComponent(machineType)}${version ? `&version=${encodeURIComponent(version)}` : ''}${lastUpdated ? `&lastUpdated=${encodeURIComponent(lastUpdated)}` : ''}&pdfUrl=${encodeURIComponent(pdfUrl)}${coverImageUrl ? `&coverImageUrl=${encodeURIComponent(coverImageUrl)}` : ''}${dataAihint ? `&dataAihint=${encodeURIComponent(dataAihint)}` : ''}`;
 
+  // Operator (Operator & Maintenance) and Maintenance Planner can edit/delete. Warehouse cannot.
+  const canModifyManual = userRole === "operator" || userRole === "maintenance-planner";
+
   return (
     <Card className="flex flex-col overflow-hidden shadow-lg transition-all hover:shadow-xl">
       <div className="relative h-56 sm:h-64 w-full">
@@ -82,7 +85,7 @@ export default function ManualCard({
           </div>
       </CardContent>
       <CardFooter className="grid grid-cols-2 gap-2 border-t pt-4">
-        {userRole !== "operator" && (
+        {canModifyManual ? (
           <>
             <Button variant="outline" size="sm" className="flex-1" asChild>
               <Link href={editUrl}>
@@ -109,34 +112,32 @@ export default function ManualCard({
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+            <Button variant="outline" size="sm" className="col-span-1 flex-1 mt-2" asChild>
+              <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
+                  <Eye className="mr-2 h-4 w-4" /> View PDF
+              </a>
+            </Button>
+            <Button variant="default" size="sm" className="col-span-1 flex-1 mt-2" asChild>
+                <a href={pdfUrl} download={`${manualTitle.replace(/\s+/g, '_')}.pdf`}>
+                    <Download className="mr-2 h-4 w-4" /> Download
+                </a>
+            </Button>
           </>
-        )}
-        {/* Conditional rendering for operator ensuring full width for view/download */}
-        {userRole === "operator" ? (
-             <div className="col-span-2 grid grid-cols-2 gap-2">
-                 <Button variant="outline" size="sm" className="flex-1" asChild>
+        ) : (
+            // For roles like Warehouse that cannot modify, but can view/download
+            <>
+                 <Button variant="outline" size="sm" className="col-span-1 flex-1" asChild>
                     <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
                         <Eye className="mr-2 h-4 w-4" /> View PDF
                     </a>
                 </Button>
-                <Button variant="default" size="sm" className="flex-1" asChild>
+                <Button variant="default" size="sm" className="col-span-1 flex-1" asChild>
                     <a href={pdfUrl} download={`${manualTitle.replace(/\s+/g, '_')}.pdf`}>
                         <Download className="mr-2 h-4 w-4" /> Download
                     </a>
                 </Button>
-            </div>
-        ) : (
-            <>
-                <Button variant="outline" size="sm" className="col-span-1 flex-1" asChild>
-                <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
-                    <Eye className="mr-2 h-4 w-4" /> View PDF
-                </a>
-                </Button>
-                <Button variant="default" size="sm" className="col-span-1 flex-1" asChild>
-                <a href={pdfUrl} download={`${manualTitle.replace(/\s+/g, '_')}.pdf`}>
-                    <Download className="mr-2 h-4 w-4" /> Download
-                </a>
-                </Button>
+                 {/* Placeholder for the space where edit/delete buttons would be */}
+                <div className="col-span-2"></div>
             </>
         )}
       </CardFooter>

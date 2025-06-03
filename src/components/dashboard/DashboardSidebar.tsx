@@ -44,7 +44,7 @@ interface NavItem {
 const allNavItems: NavItem[] = [
   { href: '/dashboard', labelKey: 'sidebarDashboard', icon: LayoutDashboard, roles: ['operator', 'maintenance-planner', 'warehouse'] },
   { href: '/dashboard/maintenance', labelKey: 'sidebarMaintenanceTasks', icon: Wrench, roles: ['operator', 'maintenance-planner'] },
-  { href: '/dashboard/inventory', labelKey: 'sidebarMaintenanceLog', icon: ClipboardList, roles: ['maintenance-planner'] },
+  { href: '/dashboard/inventory', labelKey: 'sidebarMaintenanceLog', icon: ClipboardList, roles: ['operator', 'maintenance-planner'] }, // Operator can now access Log
   { href: '/dashboard/stock', labelKey: 'sidebarComponentStock', icon: Archive, roles: ['warehouse', 'maintenance-planner'] },
   { href: '/dashboard/manuals', labelKey: 'sidebarManuals', icon: BookOpenText, roles: ['operator', 'maintenance-planner'] },
 ];

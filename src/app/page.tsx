@@ -19,7 +19,7 @@ export default function PreRoleSelectionPage() {
     }
     toast({
       title: "Role Noted",
-      description: `You've selected ${roleDisplayName}. Please log in.`,
+      description: `You've selected ${roleDisplayName}. Please proceed to login.`,
     });
     router.push("/login");
   };
@@ -30,15 +30,15 @@ export default function PreRoleSelectionPage() {
         <CardHeader className="items-center text-center">
           <Logo className="mb-4" iconSize={10} textSize="text-3xl" />
           <CardTitle className="text-2xl font-bold text-card-foreground">Select Your Role</CardTitle>
-          <CardDescription className="text-muted-foreground">Choose your role to proceed to login.</CardDescription>
+          <CardDescription className="text-muted-foreground">Choose your role to continue to the dashboard.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Button
             variant="outline"
             className="w-full h-14 text-base justify-start p-4"
-            onClick={() => handleRoleSelect("operator", "Operator")}
+            onClick={() => handleRoleSelect("operator", "Operator & Maintenance")}
           >
-            <Wrench className="mr-3 h-6 w-6 text-primary" /> Operator
+            <Wrench className="mr-3 h-6 w-6 text-primary" /> Operator & Maintenance
           </Button>
           <Button
             variant="outline"

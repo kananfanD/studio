@@ -70,6 +70,9 @@ export default function MaintenanceTaskCard({
 
   const editUrl = `${editPath}?id=${id}&taskName=${encodeURIComponent(taskName)}&machineId=${encodeURIComponent(machineId)}&dueDate=${encodeURIComponent(dueDate)}&status=${encodeURIComponent(status)}${assignedTo ? `&assignedTo=${encodeURIComponent(assignedTo)}` : ''}${priority ? `&priority=${encodeURIComponent(priority)}` : ''}${description ? `&description=${encodeURIComponent(description)}` : ''}${imageUrl ? `&imageUrl=${encodeURIComponent(imageUrl)}` : ''}${dataAihint ? `&dataAihint=${encodeURIComponent(dataAihint || "")}` : ''}`;
 
+  // Operator (Operator & Maintenance) and Maintenance Planner can delete. Warehouse cannot.
+  const canDeleteTask = userRole === "operator" || userRole === "maintenance-planner";
+
   return (
     <Card className="flex flex-col overflow-hidden shadow-lg transition-all hover:shadow-xl">
       <div className="relative h-40 sm:h-48 w-full">
@@ -126,7 +129,7 @@ export default function MaintenanceTaskCard({
             <Edit3 className="mr-2 h-4 w-4" /> Edit
           </Link>
         </Button>
-        {userRole !== "operator" && (
+        {canDeleteTask && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" size="sm" className="flex-1">

@@ -64,7 +64,7 @@ export default function LoginForm() {
     if (userRole === 'maintenance-planner') {
         roleDisplayName = 'Maintenance Planner';
     } else if (userRole === 'operator') {
-        roleDisplayName = 'Operator';
+        roleDisplayName = 'Operator & Maintenance';
     } else if (userRole === 'warehouse') {
         roleDisplayName = 'Warehouse Staff';
     }
