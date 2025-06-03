@@ -48,6 +48,7 @@ export interface MonthlyTask {
   imageUrl?: string;
 }
 
+type UserRole = "operator" | "maintenance" | "warehouse" | null;
 
 const initialDailyTasks: DailyTask[] = [
   { id: "dt001", taskName: "Oil Level Check - Unit A", machineId: "CNC-001", dueDate: "Today", status: "Pending", assignedTo: "John Doe", priority: "High", description: "Check oil level and top up if necessary." , imageUrl: "https://placehold.co/600x400.png" },
@@ -69,13 +70,14 @@ export default function MaintenanceTasksPage() {
   const [monthlyTasks, setMonthlyTasks] = useState<MonthlyTask[]>([]);
   const [activeTab, setActiveTab] = useState<"daily" | "weekly" | "monthly">("daily");
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [userRole, setUserRole] = useState<UserRole>(null);
   const { toast } = useToast();
 
   const [currentTranslations, setCurrentTranslations] = useState(translations.en);
   const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>("en");
 
   useEffect(() => {
-    const loadLanguage = () => {
+    const loadLanguageAndRole = () => {
       const savedLanguage = localStorage.getItem("userLanguage") as SupportedLanguage | null;
       if (savedLanguage && languageMap[savedLanguage]) {
         setSelectedLanguage(savedLanguage);
@@ -84,12 +86,14 @@ export default function MaintenanceTasksPage() {
         setSelectedLanguage("en");
         setCurrentTranslations(translations.en);
       }
+      const role = localStorage.getItem("userRole") as UserRole;
+      setUserRole(role);
     };
-    loadLanguage();
+    loadLanguageAndRole();
 
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'userLanguage') {
-        loadLanguage();
+      if (event.key === 'userLanguage' || event.key === 'userRole') {
+        loadLanguageAndRole();
       }
     };
     window.addEventListener('storage', handleStorageChange);
@@ -140,6 +144,14 @@ export default function MaintenanceTasksPage() {
   }, [monthlyTasks, hasInitialized]);
 
   const handleDeleteTask = (taskId: string, type: "daily" | "weekly" | "monthly") => {
+    if (userRole === "operator") {
+        toast({
+            title: "Action Not Allowed",
+            description: "Operators cannot delete tasks.",
+            variant: "destructive",
+        });
+        return;
+    }
     let taskName = "";
     if (type === "daily") {
       const taskToDelete = dailyTasks.find(task => task.id === taskId);
@@ -155,8 +167,8 @@ export default function MaintenanceTasksPage() {
       setMonthlyTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
     }
     toast({
-      title: `${type.charAt(0).toUpperCase() + type.slice(1)} Task Deleted`, // This could be translated
-      description: `The task "${taskName}" has been successfully deleted.`, // This could be translated
+      title: `${type.charAt(0).toUpperCase() + type.slice(1)} Task Deleted`,
+      description: `The task "${taskName}" has been successfully deleted.`,
       variant: "destructive",
     });
   };
@@ -194,11 +206,13 @@ export default function MaintenanceTasksPage() {
         title={currentTranslations.pageTitleMaintenanceTasks || "Maintenance Tasks"}
         description={currentTranslations.pageDescriptionMaintenanceTasks || "Manage and track all maintenance activities."}
       >
-        <Button asChild className="w-full sm:w-auto">
-          <Link href={buttonHref}>
-            <ButtonIcon className="mr-2 h-4 w-4" /> {buttonText}
-          </Link>
-        </Button>
+        {userRole !== "operator" && (
+          <Button asChild className="w-full sm:w-auto">
+            <Link href={buttonHref}>
+              <ButtonIcon className="mr-2 h-4 w-4" /> {buttonText}
+            </Link>
+          </Button>
+        )}
       </PageHeader>
 
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "daily" | "weekly" | "monthly")} className="w-full">
@@ -217,6 +231,7 @@ export default function MaintenanceTasksPage() {
                 onDelete={() => handleDeleteTask(task.id, "daily")}
                 editPath="/dashboard/maintenance/daily/new"
                 imageUrl={task.imageUrl || "https://placehold.co/600x400.png"}
+                userRole={userRole}
               />
             ))}
           </div>
@@ -237,6 +252,7 @@ export default function MaintenanceTasksPage() {
                 onDelete={() => handleDeleteTask(task.id, "weekly")}
                 editPath="/dashboard/maintenance/weekly/new"
                 imageUrl={task.imageUrl || "https://placehold.co/600x400.png"}
+                userRole={userRole}
               />
             ))}
           </div>
@@ -257,6 +273,7 @@ export default function MaintenanceTasksPage() {
                 onDelete={() => handleDeleteTask(task.id, "monthly")}
                 editPath="/dashboard/maintenance/monthly/new"
                 imageUrl={task.imageUrl || "https://placehold.co/600x400.png"}
+                userRole={userRole}
               />
             ))}
           </div>
@@ -271,5 +288,4 @@ export default function MaintenanceTasksPage() {
     </>
   );
 }
-
     

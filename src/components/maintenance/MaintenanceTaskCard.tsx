@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog"
 
 export type TaskStatus = "Pending" | "In Progress" | "Completed" | "Overdue";
+type UserRole = "operator" | "maintenance" | "warehouse" | null;
 
 interface MaintenanceTaskCardProps {
   id: string;
@@ -32,6 +33,7 @@ interface MaintenanceTaskCardProps {
   imageUrl?: string;
   onDelete: (id: string) => void;
   editPath: string; // e.g., /dashboard/maintenance/daily/new
+  userRole: UserRole;
 }
 
 const statusColors: Record<TaskStatus, string> = {
@@ -60,6 +62,7 @@ export default function MaintenanceTaskCard({
   imageUrl = "https://placehold.co/600x400.png",
   onDelete,
   editPath,
+  userRole,
 }: MaintenanceTaskCardProps) {
   const StatusIcon = statusIcons[status];
 
@@ -112,26 +115,28 @@ export default function MaintenanceTaskCard({
             <Edit3 className="mr-2 h-4 w-4" /> Edit
           </Link>
         </Button>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive" size="sm" className="flex-1">
-              <Trash2 className="mr-2 h-4 w-4" /> Delete
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the task
-                &quot;{taskName}&quot;.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => onDelete(id)}>Delete</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {userRole !== "operator" && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm" className="flex-1">
+                <Trash2 className="mr-2 h-4 w-4" /> Delete
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the task
+                  &quot;{taskName}&quot;.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onDelete(id)}>Delete</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </CardFooter>
     </Card>
   );
