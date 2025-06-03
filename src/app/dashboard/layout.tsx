@@ -98,8 +98,8 @@ export default function DashboardLayout({
             else router.push("/dashboard"); // Default for maintenance or unknown
           }
         } else {
-          // If logged in but no role, redirect to role selection page
-          router.push("/role-selection"); 
+          // If logged in but no role, redirect to login page (which now handles role selection)
+          router.push("/"); 
         }
       } else {
         // If not logged in, redirect to login page
@@ -125,8 +125,8 @@ export default function DashboardLayout({
 
         if (!currentRoleFromStorage) { 
             setIsAuthorized(false);
-            // If logged in but no role, redirect to role selection page
-            router.push("/role-selection");
+            // If logged in but no role, redirect to login page
+            router.push("/");
             return;
         }
         
