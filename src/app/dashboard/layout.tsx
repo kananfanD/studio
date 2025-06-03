@@ -87,58 +87,50 @@ export default function DashboardLayout({
       
       setUserRole(role);
 
-      if (loggedInStatus === "true") {
-        if (role) {
-          if (isPathAllowed(pathname, role)) {
-            setIsAuthorized(true);
-          } else {
-            // If path not allowed for the role, redirect to a default page for that role
-            if (role === "operator") router.push("/dashboard/maintenance");
-            else if (role === "warehouse") router.push("/dashboard/stock");
-            else router.push("/dashboard"); // Default for maintenance or unknown
-          }
-        } else {
-          // If logged in but no role, redirect to login page (which now handles role selection)
-          router.push("/"); 
-        }
+      if (loggedInStatus !== "true") {
+        router.push("/login"); 
+      } else if (!role) {
+        router.push("/"); // Logged in, but no role, go to role pre-selection
       } else {
-        // If not logged in, redirect to login page
-        router.push("/"); 
+        // Logged in and role selected
+        if (isPathAllowed(pathname, role)) {
+          setIsAuthorized(true);
+        } else {
+          if (role === "operator") router.push("/dashboard/maintenance");
+          else if (role === "warehouse") router.push("/dashboard/stock");
+          else router.push("/dashboard"); 
+        }
       }
       setIsLoading(false);
     }
   }, [router, pathname]); 
 
-  // This useEffect handles re-authorization if the role or path changes
   useEffect(() => {
     if (!isLoading && typeof window !== 'undefined') {
         const currentRoleFromStorage = localStorage.getItem("userRole") as UserRole;
-        setUserRole(currentRoleFromStorage); // Keep userRole state in sync
+        setUserRole(currentRoleFromStorage); 
 
         const loggedInStatus = localStorage.getItem("equipCareUserLoggedIn");
 
         if (loggedInStatus !== "true") {
-            setIsAuthorized(false); // Not authorized if not logged in
-            router.push("/");
+            setIsAuthorized(false); 
+            router.push("/login");
             return;
         }
 
         if (!currentRoleFromStorage) { 
             setIsAuthorized(false);
-            // If logged in but no role, redirect to login page
-            router.push("/");
+            router.push("/"); // Logged in, but no role, go to role pre-selection
             return;
         }
         
-        // Check if current path is allowed for the current role
         if (isPathAllowed(pathname, currentRoleFromStorage)) {
             setIsAuthorized(true);
         } else {
-            setIsAuthorized(false); // Path not allowed, mark as not authorized
-            // Redirect to a default safe page for the role
+            setIsAuthorized(false); 
             if (currentRoleFromStorage === "operator") router.push("/dashboard/maintenance");
             else if (currentRoleFromStorage === "warehouse") router.push("/dashboard/stock");
-            else router.push("/dashboard"); // Default for maintenance or other roles
+            else router.push("/dashboard"); 
         }
     }
   }, [pathname, isLoading, router]);
@@ -146,7 +138,7 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (typeof window !== 'undefined' && isAuthorized) {
-      document.title = "EquipCare Dashboard";
+      document.title = "EquipCare Hub Dashboard";
     }
   }, [isAuthorized]);
 
@@ -162,9 +154,7 @@ export default function DashboardLayout({
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <div className="flex w-full h-full">
-          {/* Skeleton for sidebar */}
           <Skeleton className={cn("h-full transition-all duration-300 ease-in-out", isMobileView ? "w-0" : (isDesktopSidebarOpen ? "w-64" : "w-20"))} />
-          {/* Skeleton for main content */}
           <div className="flex-1 p-6 md:p-8 space-y-8">
             <div className="flex justify-between">
               <Skeleton className="h-10 w-1/2" />
@@ -189,8 +179,8 @@ export default function DashboardLayout({
         <Sheet open={isMobileSidebarOpen} onOpenChange={setIsMobileSidebarOpen}>
           <SheetContent side="left" className="p-0 w-[280px] flex flex-col bg-sidebar text-sidebar-foreground">
             <DashboardSidebar 
-              isOpen={true} // Mobile sidebar is always "open" when sheet is visible
-              onToggle={() => setIsMobileSidebarOpen(false)} // Toggle closes the sheet
+              isOpen={true} 
+              onToggle={() => setIsMobileSidebarOpen(false)} 
               userRole={userRole}
               isMobileView={true} 
             />
@@ -207,7 +197,7 @@ export default function DashboardLayout({
       
       <main className={cn(
         "flex-1 transition-all duration-300 ease-in-out",
-        isMobileView ? "pl-0" : (isDesktopSidebarOpen ? "pl-64" : "pl-20") // Adjust padding left based on sidebar state
+        isMobileView ? "pl-0" : (isDesktopSidebarOpen ? "pl-64" : "pl-20") 
         )}>
         {isMobileView && (
           <div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-2 border-b">
