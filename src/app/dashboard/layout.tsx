@@ -12,7 +12,7 @@ import { Menu as MenuIcon } from "lucide-react";
 
 type UserRole = "operator" | "maintenance" | "warehouse" | null;
 
-const commonAllowedPaths = ["/dashboard/profile", "/dashboard/settings"]; // Added /dashboard/settings
+const commonAllowedPaths = ["/dashboard/profile", "/dashboard/settings"];
 const operatorAllowedPathPrefixes = ["/dashboard/maintenance", "/dashboard/manuals", "/dashboard", ...commonAllowedPaths];
 const warehouseAllowedPathPrefixes = ["/dashboard/stock", "/dashboard", ...commonAllowedPaths];
 const maintenanceAllowedPathPrefixes = ["/dashboard"]; 
@@ -21,7 +21,6 @@ function isPathAllowed(path: string, role: UserRole): boolean {
   if (!role) return false;
 
   if (role === "maintenance") {
-    // Maintenance staff can access any path starting with /dashboard
     return path.startsWith("/dashboard");
   }
   if (role === "operator") {
@@ -50,7 +49,6 @@ export default function DashboardLayout({
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>(null);
 
-  // Effect to apply theme from localStorage on initial load and when it changes
   useEffect(() => {
     const applyTheme = () => {
       const savedTheme = localStorage.getItem("theme");
@@ -60,7 +58,7 @@ export default function DashboardLayout({
         document.documentElement.classList.remove("dark");
       }
     };
-    applyTheme(); // Apply on initial load
+    applyTheme(); 
 
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === 'theme') {
@@ -93,56 +91,51 @@ export default function DashboardLayout({
           if (isPathAllowed(pathname, role)) {
             setIsAuthorized(true);
           } else {
-            // Redirect to a default allowed page for the role if current path is not allowed
             if (role === "operator") router.push("/dashboard/maintenance");
             else if (role === "warehouse") router.push("/dashboard/stock");
-            else router.push("/dashboard"); // Default for maintenance
+            else router.push("/dashboard"); 
           }
         } else {
-          // If logged in but no role (e.g., direct navigation after login but before role selection)
-          router.push("/role-selection"); 
+          // If logged in but no role, redirect to login page (which now handles role selection)
+          router.push("/"); 
         }
       } else {
-        // If not logged in
         router.push("/"); 
       }
       setIsLoading(false);
     }
   }, [router, pathname]); 
 
-  // This effect re-evaluates authorization when pathname or loading state changes,
-  // ensuring that if a user navigates to a disallowed page, they are redirected.
   useEffect(() => {
     if (!isLoading && typeof window !== 'undefined') {
         const currentRoleFromStorage = localStorage.getItem("userRole") as UserRole;
-        setUserRole(currentRoleFromStorage); // Ensure userRole state is up-to-date
+        setUserRole(currentRoleFromStorage); 
 
         const loggedInStatus = localStorage.getItem("equipCareUserLoggedIn");
 
         if (loggedInStatus !== "true") {
-            setIsAuthorized(false); // Not authorized if not logged in
+            setIsAuthorized(false); 
             router.push("/");
             return;
         }
 
-        if (!currentRoleFromStorage) { // No role selected
+        if (!currentRoleFromStorage) { 
             setIsAuthorized(false);
-            router.push("/role-selection");
+             // If logged in but no role, redirect to login page (which now handles role selection)
+            router.push("/");
             return;
         }
         
-        // Check if the current path is allowed for the stored role
         if (isPathAllowed(pathname, currentRoleFromStorage)) {
             setIsAuthorized(true);
         } else {
-            // If current path is not allowed, mark as not authorized and redirect
             setIsAuthorized(false); 
             if (currentRoleFromStorage === "operator") router.push("/dashboard/maintenance");
             else if (currentRoleFromStorage === "warehouse") router.push("/dashboard/stock");
-            else router.push("/dashboard"); // Default for maintenance or other roles
+            else router.push("/dashboard"); 
         }
     }
-  }, [pathname, isLoading, router]); // Depend on pathname and isLoading
+  }, [pathname, isLoading, router]);
 
 
   useEffect(() => {
