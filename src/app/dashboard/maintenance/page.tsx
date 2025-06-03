@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { translations, type SupportedLanguage, languageMap } from "../settings/page";
+import type { CombinedTask, MaintenanceTaskType } from "../inventory/page";
 
 export interface DailyTask {
   id: string;
@@ -101,6 +102,10 @@ export default function MaintenanceTasksPage() {
       if (event.key === 'userLanguage' || event.key === 'userRole') {
         loadLanguageAndRole();
       }
+      // Also listen for direct task list changes to reload
+      if ((event.key === 'dailyTasks' || event.key === 'weeklyTasks' || event.key === 'monthlyTasks' || event.key === 'allMaintenanceTasksLog') && event.newValue) {
+        loadTasksAndPopulateLog(); // Re-run the loading and log population logic
+      }
     };
     window.addEventListener('storage', handleStorageChange);
     return () => {
@@ -109,28 +114,61 @@ export default function MaintenanceTasksPage() {
   }, []);
 
 
-  const loadTasks = () => {
-    const storedDaily = localStorage.getItem("dailyTasks");
-    setDailyTasks(storedDaily ? JSON.parse(storedDaily) : initialDailyTasks);
-    if(!storedDaily) localStorage.setItem("dailyTasks", JSON.stringify(initialDailyTasks));
+  const loadTasksAndPopulateLog = () => {
+    let isInitialPopulationForAnyType = false;
 
+    const storedDaily = localStorage.getItem("dailyTasks");
+    if (!storedDaily) {
+      localStorage.setItem("dailyTasks", JSON.stringify(initialDailyTasks));
+      setDailyTasks(initialDailyTasks);
+      isInitialPopulationForAnyType = true;
+    } else {
+      setDailyTasks(JSON.parse(storedDaily));
+    }
 
     const storedWeekly = localStorage.getItem("weeklyTasks");
-    setWeeklyTasks(storedWeekly ? JSON.parse(storedWeekly) : initialWeeklyTasks);
-     if(!storedWeekly) localStorage.setItem("weeklyTasks", JSON.stringify(initialWeeklyTasks));
-
+    if (!storedWeekly) {
+      localStorage.setItem("weeklyTasks", JSON.stringify(initialWeeklyTasks));
+      setWeeklyTasks(initialWeeklyTasks);
+      isInitialPopulationForAnyType = true;
+    } else {
+      setWeeklyTasks(JSON.parse(storedWeekly));
+    }
 
     const storedMonthly = localStorage.getItem("monthlyTasks");
-    setMonthlyTasks(storedMonthly ? JSON.parse(storedMonthly) : initialMonthlyTasks);
-    if(!storedMonthly) localStorage.setItem("monthlyTasks", JSON.stringify(initialMonthlyTasks));
+    if (!storedMonthly) {
+      localStorage.setItem("monthlyTasks", JSON.stringify(initialMonthlyTasks));
+      setMonthlyTasks(initialMonthlyTasks);
+      isInitialPopulationForAnyType = true;
+    } else {
+      setMonthlyTasks(JSON.parse(storedMonthly));
+    }
     
+    // If any of the task types were initialized, attempt to initialize the log
+    if (isInitialPopulationForAnyType) {
+      const storedAllTasksLog = localStorage.getItem("allMaintenanceTasksLog");
+      // Check if log is missing or is an empty array string
+      if (!storedAllTasksLog || (storedAllTasksLog && JSON.parse(storedAllTasksLog).length === 0) ) {
+        const combinedInitialLog: CombinedTask[] = [];
+
+        initialDailyTasks.forEach(task => combinedInitialLog.push({ ...task, type: "Daily" as MaintenanceTaskType, imageUrl: task.imageUrl || "https://placehold.co/600x400.png" }));
+        initialWeeklyTasks.forEach(task => combinedInitialLog.push({ ...task, type: "Weekly" as MaintenanceTaskType, imageUrl: task.imageUrl || "https://placehold.co/600x400.png" }));
+        initialMonthlyTasks.forEach(task => combinedInitialLog.push({ ...task, type: "Monthly" as MaintenanceTaskType, imageUrl: task.imageUrl || "https://placehold.co/600x400.png" }));
+        
+        localStorage.setItem("allMaintenanceTasksLog", JSON.stringify(combinedInitialLog));
+        // Dispatch event so inventory page can update if it's open
+        window.dispatchEvent(new StorageEvent('storage', { key: 'allMaintenanceTasksLog', newValue: JSON.stringify(combinedInitialLog), storageArea: localStorage }));
+      }
+    }
     setHasInitialized(true);
   };
 
-  useEffect(() => {
-    loadTasks();
-  }, []);
 
+  useEffect(() => {
+    loadTasksAndPopulateLog();
+  }, []); // Initial load
+
+  // Separate useEffects to save individual task lists when they change
   useEffect(() => {
     if (hasInitialized) {
       localStorage.setItem("dailyTasks", JSON.stringify(dailyTasks));
@@ -148,6 +186,7 @@ export default function MaintenanceTasksPage() {
       localStorage.setItem("monthlyTasks", JSON.stringify(monthlyTasks));
     }
   }, [monthlyTasks, hasInitialized]);
+
 
   const handleDeleteTask = (taskId: string, type: "daily" | "weekly" | "monthly") => {
     if (userRole === "operator") {
@@ -172,24 +211,22 @@ export default function MaintenanceTasksPage() {
       taskName = taskToDelete?.taskName || "Task";
       setMonthlyTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
     }
+
+    // Also remove from allMaintenanceTasksLog
+    const storedAllTasksLogString = localStorage.getItem("allMaintenanceTasksLog");
+    if (storedAllTasksLogString) {
+        let allTasksLog: CombinedTask[] = JSON.parse(storedAllTasksLogString);
+        allTasksLog = allTasksLog.filter(task => task.id !== taskId);
+        localStorage.setItem("allMaintenanceTasksLog", JSON.stringify(allTasksLog));
+        window.dispatchEvent(new StorageEvent('storage', { key: 'allMaintenanceTasksLog', newValue: JSON.stringify(allTasksLog), storageArea: localStorage }));
+    }
+
     toast({
       title: `${type.charAt(0).toUpperCase() + type.slice(1)} Task Deleted`,
       description: `The task "${taskName}" has been successfully deleted.`,
       variant: "destructive",
     });
   };
-
-  useEffect(() => {
-    const handleStorageChange = (event: StorageEvent) => {
-      if ((event.key === 'dailyTasks' || event.key === 'weeklyTasks' || event.key === 'monthlyTasks') && event.newValue) {
-        loadTasks();
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
 
   const getButtonInfo = () => {
     switch (activeTab) {
